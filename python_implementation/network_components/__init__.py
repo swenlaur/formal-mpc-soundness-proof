@@ -1,3 +1,5 @@
 from .machine import Machine
-from .input_port import InputPort
-from .output_port import OutputPort
+from .ports import InputPort
+from .ports import OutputPort
+from .buffers import Buffer
+from .buffers import LeakyBuffer

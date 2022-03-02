@@ -1,4 +1,8 @@
-class Machine:
+from typing import List
 
-    def connect_buffers(self, input_buffers, output_buffers):
-        pass
+
+class Machine:
+    def __init__(self):
+        self.input_ports: List[int] = []
+        self.ouput_ports: List[int] = []
+
