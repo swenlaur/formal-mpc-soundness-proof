@@ -1,0 +1,2 @@
+class IOFunctionality:
+    pass

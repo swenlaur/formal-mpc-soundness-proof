@@ -1,0 +1,2 @@
+class ParentParty:
+    pass

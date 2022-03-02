@@ -1,0 +1,2 @@
+class InterpreterState:
+    pass

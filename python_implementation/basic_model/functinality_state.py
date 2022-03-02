@@ -1,0 +1,2 @@
+class FunctionalityState:
+    pass
