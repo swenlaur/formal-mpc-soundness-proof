@@ -8,7 +8,12 @@ from typing import Callable
 
 
 class Buffer:
-    """In our model all buffers are clocked by the adversary."""
+    """
+    The class does not explicitly specify who clocks buffers.
+    The latter will be implicitly determined by the remaining code.
+    The one who calls clock_message(...) function is the clocker.
+    For most buffers the clocker is the adversary.
+    """
 
     def __init__(self, input_port: InputPort, output_port: OutputPort):
         self.input_port: InputPort = input_port
@@ -22,10 +27,15 @@ class Buffer:
 
 
 class LeakyBuffer(Buffer):
-    """Abstract leak function allows user to specify arbitrary leak models."""
-    def __init__(self):
-        super().__init__()
-        self.leak_function: Callable[[Any], Any] = None
+    """
+    Abstract leak function allows user to specify arbitrary leak models.
+    In our model, the buffer leaks the first component of the message by default.
+    """
+
+    leak_function: Callable[[Tuple[Any, Any]], Any] = lambda msg: msg[0]
+
+    def __init__(self, input_port: InputPort, output_port: OutputPort):
+        super().__init__(input_port, output_port)
 
     def peek_message_tag(self, n: int) -> Any:
         assert self.leak_function

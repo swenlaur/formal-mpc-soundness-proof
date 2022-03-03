@@ -4,8 +4,10 @@ from shared_components import ParentParty
 from shared_components import ProtocolDescription
 
 from basic_model import StatefulInterpreter
+from basic_model import CorruptionModule
 from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
+from basic_model import CorruptionModule
 
 from network_components import LeakyBuffer
 from network_components import Machine
@@ -14,6 +16,7 @@ from network_components import OutputPort
 
 from typing import Dict
 from typing import Tuple
+from typing import List
 
 n = 2
 k = 2
@@ -30,11 +33,13 @@ for i, pk, sk in enumerate(parameter_set[:n]):
 environment = Environment(parent_parties)
 
 # Initialise protocol parties
-protocol_parties = [None] * n
+interpreters: List[StatefulInterpreter] = [None] * n
+corruption_modules: List[CorruptionModule] = [None] * n
 for i, pk, sk in enumerate(parameter_set[:n]):
-    protocol_parties[i] = StatefulInterpreter(pk, sk, protocol_description[i])
+    interpreters[i] = StatefulInterpreter(pk, sk, protocol_description[i])
+    corruption_modules[i] = CorruptionModule(interpreters[i])
 
-ideal_functionalities = [None] * k
+ideal_functionalities: List[StandardFunctionality] = [None] * k
 for i, pk, sk in enumerate(parameter_set[n:n+k]):
     ideal_functionalities[i] = StandardFunctionality(pk, sk)
 
@@ -42,14 +47,14 @@ for i, pk, sk in enumerate(parameter_set[n:n+k]):
 # As there is exactly one buffer bar between machines we can use machines to index buffers
 incoming_buffers: Dict[Tuple[Machine, Machine], LeakyBuffer] = {}
 outgoing_buffers: Dict[Tuple[Machine, Machine], LeakyBuffer] = {}
-for i, p in enumerate(protocol_parties):
+for i, p in enumerate(interpreters):
     for f in ideal_functionalities + [environment]:
         incoming_buffers[p, f] = LeakyBuffer(InputPort(f, i), OutputPort(p, i))
         outgoing_buffers[p, f] = LeakyBuffer(InputPort(p, i), OutputPort(f, i))
 
 # Set up the adversary
 pk, sk = parameter_set[n + k]
-adversary = LazyAdversary(pk, sk, environment, protocol_parties, ideal_functionalities, incoming_buffers, outgoing_buffers)
+adversary = LazyAdversary(pk, sk, environment, interpreters, ideal_functionalities, incoming_buffers, outgoing_buffers)
 target_machine, port, msg = adversary.ping()
 
 while target_machine is not None:

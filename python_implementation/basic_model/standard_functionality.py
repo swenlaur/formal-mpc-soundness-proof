@@ -12,8 +12,5 @@ class StandardFunctionality:
         self.state: FunctionalityState = FunctionalityState()
         self.output_ports: List[OutputPort] = [None] * self.port_count
 
-    def connect_buffers(self, input_buffers, output_buffers):
-        pass
-
     def __call__(self, *args, **kwargs) -> List[OutputPort]:
         pass
