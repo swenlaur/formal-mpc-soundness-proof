@@ -21,9 +21,10 @@ class StatefulInterpreter:
         self.code = code
         self.state: List[Tuple[ThreadState, int]] = []
 
-    def __call__(self, instance: Any, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
+    def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
         """
         Returns a port label and a corresponding message or nothing.
         This function should be called by the corruption module.
         """
+        instance: Any
         pass

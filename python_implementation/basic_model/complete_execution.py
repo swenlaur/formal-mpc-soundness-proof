@@ -62,4 +62,7 @@ while target_machine is not None:
     if target_machine is None:
         target_machine, port, msg = adversary.ping()
 
+# adversary clock buffer and calls the corruption module with output
+
+
 print(environment.output)
