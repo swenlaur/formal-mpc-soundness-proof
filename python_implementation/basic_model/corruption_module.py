@@ -29,6 +29,7 @@ class CorruptionModule(Machine):
         if self.corrupted:
             return input_port, msg
         else:
+            # Rectify error -- interpreter can write to many ports
             reply = self.interpreter(input_port, msg)
             if reply is None:
                 return
@@ -47,7 +48,10 @@ class CorruptionModule(Machine):
         """
         Adversary can send a message to the interpreter when the party is corrupted.
         The input port determines how the interpreter treats the input:
-        TODO: fill the port legend
+        0     -- write as an adversary
+        1...k -- write as an ideal functionality
+        k + 1 -- write as an parent party from the environment
+        BUG: Wrong output type
         """
         assert self.corrupted
         return self.interpreter(input_port, msg)

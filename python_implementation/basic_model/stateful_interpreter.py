@@ -25,6 +25,8 @@ class StatefulInterpreter:
         """
         Returns a port label and a corresponding message or nothing.
         This function should be called by the corruption module.
+        TODO: Add legend to port numbers
+        BUG: This has a wrong type -- interpreter can write to many buffers
         """
         instance: Any
         pass
