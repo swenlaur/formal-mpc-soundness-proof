@@ -16,5 +16,5 @@ class StandardFunctionality:
     def __call__(self, *args, **kwargs) -> List[OutputPort]:
         pass
 
-    def adversarial_probe(self) -> Any:
+    def adversarial_probe(self, msg: Any) -> Any:
         pass

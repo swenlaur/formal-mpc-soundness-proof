@@ -3,7 +3,6 @@ from state_components import ThreadState
 from typing import Any
 from typing import List
 from typing import Tuple
-from typing import Optional
 
 
 class StatefulInterpreter:
@@ -21,12 +20,10 @@ class StatefulInterpreter:
         self.code = code
         self.state: List[Tuple[ThreadState, int]] = []
 
-    def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
+    def __call__(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
         """
-        Returns a port label and a corresponding message or nothing.
+        Returns a list of port labels and corresponding messages.
         This function should be called by the corruption module.
-        TODO: Add legend to port numbers
-        BUG: This has a wrong type -- interpreter can write to many buffers
         """
         instance: Any
         pass

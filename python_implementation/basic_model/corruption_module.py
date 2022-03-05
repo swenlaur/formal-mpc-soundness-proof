@@ -29,11 +29,9 @@ class CorruptionModule(Machine):
         if self.corrupted:
             return input_port, msg
         else:
-            # Rectify error -- interpreter can write to many ports
-            reply = self.interpreter(input_port, msg)
-            if reply is None:
-                return
-            return self.outgoing_buffers[reply[0]].write_message(reply[1])
+            for port, msg in self.interpreter(input_port, msg):
+                self.outgoing_buffers[port].write_message(msg)
+            return None
 
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
         """
