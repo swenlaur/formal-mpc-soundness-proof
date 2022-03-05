@@ -25,5 +25,7 @@ class StatefulInterpreter:
         Returns a list of port labels and corresponding messages.
         This function should be called by the corruption module.
         """
-        instance: Any
+        instance, message = msg
+
+        # TODO: add interpreter code
         pass

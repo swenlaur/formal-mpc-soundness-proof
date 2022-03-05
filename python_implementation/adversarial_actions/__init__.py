@@ -1,3 +1,4 @@
+from adversarial_action import AdversarialAction
 from corrupt_party import CorruptParty
 from clock_buffers import ClockIncomingBuffer
 from clock_buffers import ClockOutgoingBuffer

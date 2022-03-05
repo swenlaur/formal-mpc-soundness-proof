@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
+from basic_action import AdversarialAction
 
 @dataclass
-class CorruptParty:
+class CorruptParty(AdversarialAction):
     party: int

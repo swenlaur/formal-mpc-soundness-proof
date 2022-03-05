@@ -60,8 +60,8 @@ for i, p in enumerate(interpreters):
         outgoing_buffers[p, f] = LeakyBuffer(InputPort(p, i), OutputPort(f, i))
 
 # Set up the adversary
-pk, sk = parameter_set[n + k]
-adversary = LazyAdversary(pk, sk, environment, interpreters, ideal_functionalities, incoming_buffers, outgoing_buffers)
+public_param, private_param = parameter_set[n + k]
+adversary = LazyAdversary(public_param, private_param, environment)
 
 # Complete execution
 action = adversary.next_action()
@@ -69,7 +69,7 @@ while action is not None:
     if isinstance(action, CorruptParty):
         corruption_modules[action.party].corrupted = True
         reply = corruption_modules[action.party].write_to_interpreter(0, 'Reveal')
-        action = adversary.next_action(state)
+        action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
         (corruption_module, port), msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)
         reply = corruption_module(port, msg)

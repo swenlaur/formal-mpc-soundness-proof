@@ -1,24 +1,26 @@
 from dataclasses import dataclass
 
+from basic_action import AdversarialAction
+
 from typing import Any
 
 
 @dataclass
-class SendOutgoingMessage:
+class SendOutgoingMessage(AdversarialAction):
     source: int
     target: int
     msg: Any
 
 
 @dataclass
-class SendIncomingMessage:
+class SendIncomingMessage(AdversarialAction):
     source: int
     target: int
     msg: Any
 
 
 @dataclass
-class QueryFunctionality:
+class QueryFunctionality(AdversarialAction):
     target: int
     msg: Any
 
