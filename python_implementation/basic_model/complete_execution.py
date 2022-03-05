@@ -68,7 +68,7 @@ action = adversary.next_action()
 while action is not None:
     if isinstance(action, CorruptParty):
         corruption_modules[action.party].corrupted = True
-        reply = corruption_modules[action.party].write_to_interpreter(0, 'Reveal')
+        reply = corruption_modules[action.party].corrupt_party()
         action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
         (corruption_module, port), msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)

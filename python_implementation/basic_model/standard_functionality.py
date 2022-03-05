@@ -1,6 +1,5 @@
-from network_components import InputPort
 from network_components import OutputPort
-from functinality_state import FunctionalityState
+from state_components.functinality_state import FunctionalityState
 
 from typing import Any
 from typing import List

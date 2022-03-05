@@ -33,6 +33,14 @@ class CorruptionModule(Machine):
                 self.outgoing_buffers[port].write_message(msg)
             return None
 
+    def corrupt_party(self) -> Tuple[Dict[ThreadLabel, Tuple[ThreadState, int]], Any, Any]:
+        """
+        Corrupts the party and forces the interpreter to dump their internal state and public and private parameters.
+        """
+        assert not self.corrupted
+        self.corrupted = True
+        return self.interpreter.reveal_state()
+
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
         """
         Adversary can write a message to the outgoing buffers when the party is corrupted.
@@ -45,13 +53,14 @@ class CorruptionModule(Machine):
     def write_to_interpreter(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
         """
         Adversary can send a message to the interpreter when the party is corrupted.
-        The input port determines how the interpreter treats the input:
-        0     -- write as an adversary
-        1...k -- write as an ideal functionality
-        k + 1 -- write as an parent party from the environment
+        The input port indicates to the interpreter behalf of whom messages was sent and to whom to send reply.
+        The port numbering matches the numbering of out going buffers:
+        * the first k ports correspond to ideal functionalities,
+        * and the last port corresponds to the environment.
 
         Returns a list of port labels and corresponding messages the interpreter has decided to write into
         outgoing buffers. As the party is corrupted the adversary must decide what to do with this further.
         """
         assert self.corrupted
+        assert 0 <= input_port < len(self.outgoing_buffers)
         return self.interpreter(input_port, msg)
