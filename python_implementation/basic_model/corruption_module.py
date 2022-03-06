@@ -12,12 +12,22 @@ class CorruptionModule(Machine):
     """
     Corruption module controls how the interpreter interacts with outside world.
     The module writes messages only to outgoing buffers or send them instantly to the adversary.
+
+    To set up a corruption module two steps must be carried out:
+    * The list of outgoing buffers must be specified.
+    * Setup parameters must be passed form the trusted setup.
     """
 
     def __init__(self, interpreter: StatefulInterpreter):
         self.corrupted = False
         self.outgoing_buffers: List[LeakyBuffer] = []
         self.interpreter: StatefulInterpreter = interpreter
+
+    def set_outgoing_buffers(self, outgoing_buffers: List[LeakyBuffer]):
+        """
+        To complete the setup one must specify leaky output buffers to ideal functionalities and environment.
+        """
+        self.outgoing_buffers = outgoing_buffers
 
     def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
         """
