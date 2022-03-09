@@ -11,7 +11,7 @@ from typing import Dict
 class StatefulInterpreter:
     """
     Interpreter can use public and private parameters to interpret code.
-    The code will be a protocol specific but it can be set only once.
+    The code is protocol specific but it can be set only once.
     The interpreter can execute several protocol instances with separate states.
     Interpreter will be controlled by the corruption module who invokes it and patches its output
     """

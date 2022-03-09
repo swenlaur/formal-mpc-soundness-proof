@@ -42,7 +42,7 @@ environment = Environment(parent_parties)
 interpreters: List[StatefulInterpreter] = [None] * n
 corruption_modules: List[CorruptionModule] = [None] * n
 for i, pk, sk in enumerate(parameter_set[:n]):
-    interpreters[i] = StatefulInterpreter(pk, sk, protocol_description[i], port_count)
+    interpreters[i] = StatefulInterpreter(pk, sk, protocol_description[i], k + 1)
     corruption_modules[i] = CorruptionModule(interpreters[i])
 
 ideal_functionalities: List[StandardFunctionality] = [None] * k
