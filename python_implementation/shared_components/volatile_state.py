@@ -4,8 +4,8 @@ from dataclasses import field
 from network_components import Queue
 from network_components import InstanceLabel
 
-from .values import ValueType
-from .values import ValueTypeLabel
+from data_types.values import ValueType
+from data_types.values import ValueTypeLabel
 
 from typing import Any
 from typing import Dict

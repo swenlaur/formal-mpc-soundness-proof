@@ -6,9 +6,9 @@ from network_components import Queue
 from network_components import Machine
 from network_components import LocalMemory
 
-from state_components import VolatileState
-from state_components import VolatileStateType
-from state_components import PinnedLocation
+from data_types import VolatileState
+from data_types import VolatileStateType
+from data_types import PinnedLocation
 
 
 from typing import Any

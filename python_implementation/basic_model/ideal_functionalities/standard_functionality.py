@@ -1,9 +1,9 @@
 from network_components import InstanceLabel
 from network_components import LeakyBuffer
 
-from ideal_functionalities import SharingModule
-from ideal_functionalities import ComputationModule
-from ideal_functionalities import ReconstructionModule
+from basic_model.ideal_functionalities import SharingModule
+from basic_model.ideal_functionalities import ComputationModule
+from basic_model.ideal_functionalities import ReconstructionModule
 
 from typing import Any
 from typing import List

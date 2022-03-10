@@ -1,7 +1,7 @@
 from network_components import Queue
 from network_components import InstanceLabel
 
-from state_components import InstanceState
+from data_types import InstanceState
 
 from typing import Any
 from typing import List

@@ -3,10 +3,10 @@ from network_components import LeakyBuffer
 
 from network_components import InstanceLabel
 from network_components import NullInstance
-from state_components import InstanceState
-from state_components import VolatileState
-from state_components import VolatileStateType
-from state_components import PinnedLocation
+from data_types import InstanceState
+from data_types import VolatileState
+from data_types import VolatileStateType
+from data_types import PinnedLocation
 
 from network_components.adversarial_adapter import AdversarialAdapter
 
