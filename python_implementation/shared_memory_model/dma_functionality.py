@@ -1,2 +1,2 @@
-class StandardFunctionality:
+class DMAFunctionality:
     pass

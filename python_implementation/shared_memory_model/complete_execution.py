@@ -4,14 +4,16 @@ from shared_components import TrustedSetup
 from shared_components import ParentParty
 from shared_components import ProtocolDescription
 
-from basic_model import StatefulInterpreter
-from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
-from basic_model import CorruptionModule
+from shared_memory_model import StatelessInterpreter
+from shared_memory_model import DMAFunctionality
+from shared_memory_model import DummyAdversarialAdapter
 
 from network_components import LeakyBuffer
 from network_components import InputPort
 from network_components import OutputPort
+from network_components import LocalMemory
+
 
 from adversarial_actions import CorruptParty
 from adversarial_actions import ClockIncomingBuffer
@@ -40,16 +42,19 @@ for i, pk, sk in enumerate(parameter_set[:n]):
 environment = Environment(parent_parties)
 
 # Initialise protocol parties
-interpreters: List[StatefulInterpreter] = [None] * n
-corruption_modules: List[CorruptionModule] = [None] * n
+interpreters: List[StatelessInterpreter] = [None] * n
+memory_modules: List[LocalMemory] = [None] * n
+adversarial_adapters: List[DummyAdversarialAdapter]
+
 for i, pk, sk in enumerate(parameter_set[:n]):
-    interpreters[i] = StatefulInterpreter(pk, sk, protocol_description[i], k + 1)
-    corruption_modules[i] = CorruptionModule(interpreters[i])
+    memory_modules[i] = LocalMemory()
+    interpreters[i] = StatelessInterpreter(pk, sk, protocol_description[i], k + 1, memory_modules[i])
 
-ideal_functionalities: List[StandardFunctionality] = [None] * k
+ideal_functionalities: List[DMAFunctionality] = [None] * k
 for i, pk, sk in enumerate(parameter_set[n:n+k]):
-    ideal_functionalities[i] = StandardFunctionality(pk, sk)
+    ideal_functionalities[i] = DMAFunctionality(pk, sk)
 
+set_clockable_buffers
 # Initialise protocol wiring. Buffers are indexed with integers for universality
 incoming_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
 outgoing_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}

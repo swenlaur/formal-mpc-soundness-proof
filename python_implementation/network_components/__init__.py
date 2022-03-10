@@ -8,3 +8,4 @@ from .labels import NullInstance
 
 from .machine import Machine
 from .local_memory import LocalMemory
+from .adversarial_adapter import AdversarialAdapter

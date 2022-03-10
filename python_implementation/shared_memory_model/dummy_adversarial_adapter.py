@@ -1,4 +1,3 @@
-from network_components import Machine
 from network_components import LocalMemory
 from network_components import LeakyBuffer
 
@@ -9,6 +8,8 @@ from state_components import VolatileState
 from state_components import VolatileStateType
 from state_components import PinnedLocation
 
+from network_components.adversarial_adapter import AdversarialAdapter
+
 from typing import Any
 from typing import Dict
 from typing import List
@@ -16,7 +17,7 @@ from typing import Tuple
 from typing import Optional
 
 
-class DummyAdversarialAdapter(Machine):
+class DummyAdversarialAdapter(AdversarialAdapter):
     """
     Adversarial adapter that violates all memory access restrictions but manages to simulate the original
     protocol execution in the basic model. Meant to get going with the simulation.
@@ -157,4 +158,4 @@ class DummyAdversarialAdapter(Machine):
         pass
 
     def clock_outgoing_buffer(self):
-        pass    
+        pass
