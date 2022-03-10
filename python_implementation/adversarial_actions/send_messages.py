@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-
-from basic_action import AdversarialAction
+from data_types import InstanceLabel
+from .adversarial_action import AdversarialAction
 
 from typing import Any
 
@@ -23,5 +23,6 @@ class SendIncomingMessage(AdversarialAction):
 class QueryFunctionality(AdversarialAction):
     target: int
     module: str
+    instance: InstanceLabel
     msg: Any
 
