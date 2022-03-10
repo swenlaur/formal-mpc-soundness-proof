@@ -12,4 +12,3 @@ class ValueTypeLabel:
     Each subclass of ValueType has matching subclass of TypeLabel.
     """
     pass
-

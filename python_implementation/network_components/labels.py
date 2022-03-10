@@ -5,3 +5,10 @@ class InstanceLabel:
     Instance labels are used to index states of interpreters and functionalities.
     """
     pass
+
+
+class NullInstance(InstanceLabel):
+    """
+    Special symbol for null-instance used to reference volatile state shared by all instances.
+    """
+    pass

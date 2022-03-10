@@ -1,5 +1,6 @@
-from state_components import Queue
-from state_components import InstanceLabel
+from network_components import Queue
+from network_components import InstanceLabel
+
 from state_components import InstanceState
 
 from typing import Any
