@@ -4,8 +4,12 @@ from typing import Tuple
 
 
 class TrustedSetup:
-    def __init__(self, n: int, k: int):
-        pass
+    """
+    Empty base class for all environments.
+    """
 
-    def generate_parameters(self) -> List[Tuple[Any, Any]]:
+    def __init__(self, n: int, k: int):
+        self.output_size = n + k + 1
+
+    def __call__(self) -> List[Tuple[Any, Any]]:
         pass

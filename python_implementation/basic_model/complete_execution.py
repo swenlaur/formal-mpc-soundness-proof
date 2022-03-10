@@ -1,6 +1,3 @@
-from shared_components import Environment
-from shared_components import TrustedSetup
-from shared_components import ParentParty
 from shared_components import ProtocolDescription
 
 from basic_model import StatefulInterpreter
@@ -11,6 +8,9 @@ from basic_model import CorruptionModule
 from network_components import LeakyBuffer
 from network_components import InputPort
 from network_components import OutputPort
+from network_components import ParentParty
+from network_components import Environment
+from network_components import TrustedSetup
 
 from adversarial_actions import CorruptParty
 from adversarial_actions import ClockIncomingBuffer
@@ -24,8 +24,8 @@ from typing import Dict
 from typing import Tuple
 from typing import List
 
-n = 2
-k = 2
+n: int = 2
+k: int = 2
 
 # Generate protocol parameters
 f_setup = TrustedSetup(n, k)

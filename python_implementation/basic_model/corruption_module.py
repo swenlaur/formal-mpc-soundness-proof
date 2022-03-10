@@ -1,8 +1,12 @@
+from data_types import InstanceLabel
+from data_types import InstanceState
+
 from network_components import Machine
 from network_components import LeakyBuffer
 from basic_model import StatefulInterpreter
 
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Optional
@@ -43,7 +47,7 @@ class CorruptionModule(Machine):
                 self.outgoing_buffers[port].write_message(msg)
             return None
 
-    def corrupt_party(self) -> Tuple[Dict[ThreadLabel, Tuple[ThreadState, int]], Any, Any]:
+    def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
         Corrupts the party and forces the interpreter to dump their internal state and public and private parameters.
         """

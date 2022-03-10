@@ -1,7 +1,6 @@
-from network_components import Queue
-from network_components import InstanceLabel
-
+from data_types import InstanceLabel
 from data_types import InstanceState
+from network_components import Queue
 
 from typing import Any
 from typing import List
@@ -12,7 +11,7 @@ from typing import Dict
 class StatefulInterpreter:
     """
     Interpreter can use public and private parameters to interpret code.
-    The code is protocol specific but it can be set only once.
+    The code is protocol specific, but it can be set only once.
     The interpreter can execute several protocol instances with separate states.
     Interpreter will be controlled by the corruption module who invokes it and patches its output
     """
@@ -28,19 +27,22 @@ class StatefulInterpreter:
     def __call__(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
         """
         Processes messages coming form ideal functionalities or the environment.
-        Returns a list of port labels and corresponding messages the interpreter wants to write to buffers.
+        Returns a list of port labels and corresponding messages the interpreter wants to write into buffers.
         The port numbering matches the numbering of out going buffers:
         * the first k ports correspond to ideal functionalities,
         * and the last port corresponds to the environment.
         """
         assert 0 <= input_port < len(self.input_queues)
-        self.input_queues.append[input_port].add(msg)
+        self.input_queues[input_port].add(msg)
         protocol_instance: InstanceLabel = self.get_protocol_instance(msg)
+        writing_instructions: List[Tuple[int, Any]] = []
 
         # TODO: add interpreter code here!
-        pass
+        _ = protocol_instance
 
-    def reveal_state(self) -> Tuple[Dict[InstanceLabel, Tuple[ThreadState, int]], Any, Any]:
+        return writing_instructions
+
+    def reveal_state(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """Reveals the state together with corresponding program counters and public and private parameters."""
         return self.state, self.public_param, self.private_param
 
@@ -50,4 +52,3 @@ class StatefulInterpreter:
         Extracts protocol instance from the incoming message.
         """
         pass
-
