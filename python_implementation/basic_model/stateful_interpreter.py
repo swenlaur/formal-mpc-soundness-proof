@@ -1,6 +1,7 @@
 from data_types import InstanceLabel
 from data_types import InstanceState
 from network_components import Queue
+from network_components import Machine
 
 from typing import Any
 from typing import List
@@ -8,7 +9,7 @@ from typing import Tuple
 from typing import Dict
 
 
-class StatefulInterpreter:
+class StatefulInterpreter(Machine):
     """
     Interpreter can use public and private parameters to interpret code.
     The code is protocol specific, but it can be set only once.

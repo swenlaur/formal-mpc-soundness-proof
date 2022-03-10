@@ -22,5 +22,6 @@ class SendIncomingMessage(AdversarialAction):
 @dataclass
 class QueryFunctionality(AdversarialAction):
     target: int
+    module: str
     msg: Any
 
