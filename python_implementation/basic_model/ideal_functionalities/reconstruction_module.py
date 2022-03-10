@@ -1,7 +1,9 @@
-from typing import Any
-from typing import Tuple
+from data_types import InstanceLabel
+from data_types import InstanceState
 
-from network_components import InstanceLabel
+from typing import Any
+from typing import Dict
+from typing import Tuple
 
 
 class ReconstructionModule:

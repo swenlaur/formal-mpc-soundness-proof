@@ -1,4 +1,4 @@
-from network_components import InstanceLabel
+from data_types import InstanceLabel
 
 from typing import Any
 from typing import Tuple

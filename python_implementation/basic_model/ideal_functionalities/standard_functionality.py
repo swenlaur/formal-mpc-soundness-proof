@@ -1,4 +1,4 @@
-from network_components import InstanceLabel
+from data_types import InstanceLabel
 from network_components import LeakyBuffer
 
 from basic_model.ideal_functionalities import SharingModule
@@ -62,7 +62,7 @@ class StandardFunctionality:
         instance, caller, data = self.expand_message(msg)
 
         if module == 'r':
-            abort, data = self.reconstruction_module.adversarial_probe(msg)
+            abort, data = self.reconstruction_module.adversarial_probe(instance, msg)
 
             if abort:
                 return data
@@ -82,4 +82,3 @@ class StandardFunctionality:
         Splits incoming message into instance, caller, payload tuple.
         """
         pass
-
