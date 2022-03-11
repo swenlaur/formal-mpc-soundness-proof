@@ -154,8 +154,8 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         # TODO: ??
         return self.interpreter(input_port, msg)
 
-    def clock_incoming_buffer(self):
+    def clock_incoming_buffer(self, input_port: int, msg_index: int) -> Optional[Tuple[int, Any]]:
         pass
 
-    def clock_outgoing_buffer(self):
+    def clock_outgoing_buffer(self, output_port: int, msg_index: int) -> None:
         pass

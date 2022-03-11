@@ -78,7 +78,6 @@ adversary = LazyAdversary(public_param, private_param, environment)
 action = adversary.next_action(None)
 while action is not None:
     if isinstance(action, CorruptParty):
-        corruption_modules[action.party].corrupted = True
         reply = corruption_modules[action.party].corrupt_party()
         action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
