@@ -86,9 +86,12 @@ while action is not None:
         reply = adversarial_adapters[action.party].corrupt_party()
         action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
+        msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)
+        interpreters[action.target](action.source, msg)
         reply = adversarial_adapters[action.target].clock_incoming_buffer(action.source, action.msg_index)
         action = adversary.next_action(reply)
     elif isinstance(action, ClockOutgoingBuffer):
+        msg = outgoing_buffers[action.source, action.target].clock_message(action.msg_index)
         adversarial_adapters[action.source].clock_outgoing_buffer(action.target, action.msg_index)
         action = adversary.next_action(None)
     elif isinstance(action, SendIncomingMessage):

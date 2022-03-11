@@ -1,14 +1,14 @@
-from network_components import LocalMemory
-from network_components import LeakyBuffer
-
-from network_components import InstanceLabel
-from network_components import NullInstance
+from data_types import InstanceLabel
+from data_types import NullInstance
 from data_types import InstanceState
-from data_types import VolatileState
-from data_types import VolatileStateType
 from data_types import PinnedLocation
 
-from network_components.adversarial_adapter import AdversarialAdapter
+from network_components import LocalMemory
+from network_components import LeakyBuffer
+from network_components import AdversarialAdapter
+
+from .volatile_state import VolatileState
+from .volatile_state import VolatileStateType
 
 from typing import Any
 from typing import Dict
@@ -22,6 +22,9 @@ class DummyAdversarialAdapter(AdversarialAdapter):
     Adversarial adapter that violates all memory access restrictions but manages to simulate the original
     protocol execution in the basic model. Meant to get going with the simulation.
     There are small differences in the description of complete execution but these are convenience changes.
+
+    Simulation goals:
+    - Simulated buffers have the same state as in basic-model
     """
 
     def __init__(self, memory_module: LocalMemory):
@@ -31,8 +34,8 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         self.incoming_buffers: List[LeakyBuffer] = []
         self.outgoing_buffers: List[LeakyBuffer] = []
 
-        self.simulated_incoming_buffers: List[Tuple[InstanceLabel, InstanceLabel, Any]] = []
-        self.simulated_outgoing_buffers: List[Tuple[InstanceLabel, InstanceLabel, Any]] = []
+        self.simulated_incoming_buffers: List[LeakyBuffer] = []
+        self.simulated_outgoing_buffers: List[LeakyBuffer] = []
 
     def set_clockable_buffers(self, incoming_buffers: List[LeakyBuffer], outgoing_buffers: List[LeakyBuffer]):
         """
@@ -46,52 +49,25 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         self.simulated_outgoing_buffers = [LeakyBuffer()] * len(outgoing_buffers)
         self.simulated_incoming_buffers = [LeakyBuffer()] * len(incoming_buffers)
 
-    # noinspection PyTypeChecker
     def get_volatile_state(self) -> VolatileState:
         """
         Return the current volatile state of the interpreter.
         """
+        # noinspection PyTypeChecker
         return self.memory_module.read(
             instance=NullInstance(),
             locations=[(VolatileStateType(), PinnedLocation())])[0]
 
-    def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
-        """
-        Simulates how the corruption module processes inputs from incoming buffers.
-        - When the party is honest invokes the interpreter and stops without output.
-        - When the party is corrupted returns the input (input port and message) to the adversary.
-        - In both cases the output formally goes to the adversary but this is empty when the party is honest.
-        """
-        volatile_state: VolatileState = self.get_volatile_state()
-        if self.corrupted:
-            # find out (t1, t2) and take out the corresponding message form simulated incoming port
-            # It has to be the outgoimng message in the queue
+    def get_interpreter_outcome(self) -> List[Tuple[int, Any]]:
+        # Simulate execution of interpreter.
+        # Note that the interpreter has already executed next step and stopped
+        # It can stop only with the following instructions: Sleep, Send, DMACall
+        # The state of registries allows me to recover the interpreter outcome
+        #volatile_state: VolatileState = self.get_volatile_state()
 
-            return input_port, msg
-        else:
-            # This part is functionally the same but only notifications go over the
-            # but we must simulate the actual messages put into the buffers
-            for port, msg in self.interpreter(input_port, msg):
-                self.outgoing_buffers[port].write_message(msg)
+        return []
 
-                # Lets extract the message the interpreter intended to write to the buffer
-
-                # we first need a protocol instance. This is known to the adversary
-                # We can get that by making this public
-                instance = InstanceLabel()
-                program_counter = volatile_state.program_counters[instance]
-
-                # Find out the code line
-
-                # if we have direct addressing read the value from memory
-
-                # if we have indirect addressing read the values by doing indirection
-
-                self.simulated_incoming_buffers # Add stuff into it
-
-            return None
-
-    def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[ThreadState, int]], Any, Any]:
+    def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
         Simulates how the corruption module becomes corrupted:
         - Corrupts the party
@@ -100,7 +76,8 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         assert not self.corrupted
         self.corrupted = True
         full_state = self.memory_module.corrupt_party()
-        volatile_memory = full_state[NullInstance()][VolatileStateType()][PinnedLocation()]
+        # noinspection PyTypeChecker
+        volatile_memory: VolatileState = full_state[NullInstance()][VolatileStateType()][PinnedLocation()]
 
         state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {}
         for instance, instance_state in full_state:
@@ -109,6 +86,64 @@ class DummyAdversarialAdapter(AdversarialAdapter):
             state[instance] = (full_state[instance], volatile_memory.program_counters[instance])
 
         return state, volatile_memory.public_param, volatile_memory.private_param
+
+    def clock_incoming_buffer(self, input_port: int, msg_index: int) -> Optional[Tuple[int, Any]]:
+        """
+        Simulates the execution following to the clocking of an incoming buffer.
+        - The message is clocked out of the simulated ingoing buffer
+        - The corresponding response of the corruption module is simulated
+        """
+        msg = self.simulated_incoming_buffers[input_port].clock_message(msg_index)
+        if not self.corrupted:
+            for port, msg in self.get_interpreter_outcome():
+                self.simulated_outgoing_buffers[port].write_message(msg)
+            return None
+        else:
+            return input_port, msg
+
+    def clock_outgoing_buffer(self, output_port: int, msg_index: int) -> None:
+        """
+        Simulates the execution following to the clocking of an outgoing buffer.
+        - The message is clocked out of the simulated outgoing buffer
+        """
+        self.simulated_outgoing_buffers[output_port].clock_message(msg_index)
+        return None
+
+    # def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
+    #     """
+    #     Simulates how the corruption module processes inputs from incoming buffers.
+    #     - When the party is honest invokes the interpreter and stops without output.
+    #     - When the party is corrupted returns the input (input port and message) to the adversary.
+    #     - In both cases the output formally goes to the adversary but this is empty when the party is honest.
+    #     """
+    #     volatile_state: VolatileState = self.get_volatile_state()
+    #     if self.corrupted:
+    #         # find out (t1, t2) and take out the corresponding message form simulated incoming port
+    #         # It has to be the outgoing message in the queue
+    #
+    #         return input_port, msg
+    #     else:
+    #         # This part is functionally the same but only notifications go over the
+    #         # but we must simulate the actual messages put into the buffers
+    #         for port, msg in self.interpreter(input_port, msg):
+    #             self.outgoing_buffers[port].write_message(msg)
+    #
+    #             # Lets extract the message the interpreter intended to write to the buffer
+    #
+    #             # we first need a protocol instance. This is known to the adversary
+    #             # We can get that by making this public
+    #             instance = InstanceLabel()
+    #             program_counter = volatile_state.program_counters[instance]
+    #
+    #             # Find out the code line
+    #
+    #             # if we have direct addressing read the value from memory
+    #
+    #             # if we have indirect addressing read the values by doing indirection
+    #
+    #             self.simulated_incoming_buffers # Add stuff into it
+    #
+    #         return None
 
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
         """
@@ -119,8 +154,8 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
 
-        self.simulated_outgoing_buffers # Add stuff inti it
-        #return self.outgoing_buffers[input_port].write_message(msg)
+        self.simulated_outgoing_buffers  # Add stuff inti it
+        # return self.outgoing_buffers[input_port].write_message(msg)
         return None
 
     def write_to_interpreter(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
@@ -154,8 +189,3 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         # TODO: ??
         return self.interpreter(input_port, msg)
 
-    def clock_incoming_buffer(self, input_port: int, msg_index: int) -> Optional[Tuple[int, Any]]:
-        pass
-
-    def clock_outgoing_buffer(self, output_port: int, msg_index: int) -> None:
-        pass

@@ -16,18 +16,15 @@ class Buffer:
     For most buffers the clocker is the adversary.
     """
 
-    def __init__(self, input_port: InputPort, output_port: OutputPort):
-        self.input_port: InputPort = input_port
-        self.output_port: OutputPort = output_port
+    def __init__(self):
         self.messages: List[Any] = []
 
     def write_message(self, msg: Any) -> None:
         self.messages.append(msg)
 
-    def clock_message(self, n: int) -> Tuple[OutputPort, Any]:
+    def clock_message(self, n: int) -> Any:
         assert 0 <= n < len(self.messages)
-        msg = self.messages.pop(n)
-        return self.output_port, msg
+        return self.messages.pop(n)
 
 
 class LeakyBuffer(Buffer):
@@ -38,9 +35,9 @@ class LeakyBuffer(Buffer):
     This has to be a single machine.
     """
 
-    leak_function: Callable[[Tuple[Any, Any]], Any] = lambda msg: msg[0]
+    leak_function: Callable[[Any], Any] = lambda msg: msg[0]
 
-    def __init__(self, input_port: InputPort, output_port: OutputPort):
+    def __init__(self):
         super().__init__(input_port, output_port)
 
     def peek_message(self, n: int) -> Any:

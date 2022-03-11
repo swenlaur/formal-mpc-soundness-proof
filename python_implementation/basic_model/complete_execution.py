@@ -81,12 +81,15 @@ while action is not None:
         reply = corruption_modules[action.party].corrupt_party()
         action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
-        (corruption_module, port), msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)
-        reply = corruption_module(port, msg)
+        msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)
+        reply = corruption_modules[action.target](action.source, msg)
         action = adversary.next_action(reply)
     elif isinstance(action, ClockOutgoingBuffer):
-        (fun_or_env, port), msg = outgoing_buffers[action.source, action.target].clock_message(action.msg_index)
-        fun_or_env(port, msg)
+        msg = outgoing_buffers[action.source, action.target].clock_message(action.msg_index)
+        if action.target in range(k):
+            ideal_functionalities[action.target](action.source, msg)
+        else:
+            environment(action.source, msg)
         action = adversary.next_action(None)
     elif isinstance(action, SendIncomingMessage):
         reply = corruption_modules[action.target].write_to_interpreter(action.source, action.msg)

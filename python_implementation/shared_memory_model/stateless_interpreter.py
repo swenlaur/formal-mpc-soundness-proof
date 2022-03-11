@@ -56,6 +56,7 @@ class StatelessInterpreter(Machine):
         protocol_instance: InstanceLabel = self.get_protocol_instance(msg)
 
         # TODO: add interpreter code here!
+        _ = protocol_instance
 
         return self.copy_state_to_memory()
 

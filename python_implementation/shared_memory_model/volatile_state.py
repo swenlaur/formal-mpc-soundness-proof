@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from dataclasses import field
 
-from network_components import Queue
-from network_components import InstanceLabel
+from data_types import ValueType
+from data_types import ValueTypeLabel
+from data_types import InstanceLabel
 
-from data_types.values import ValueType
-from data_types.values import ValueTypeLabel
+from network_components import Queue
 
 from typing import Any
 from typing import Dict
@@ -14,6 +14,9 @@ from typing import List
 
 @dataclass
 class VolatileState(ValueType):
+    """
+    TODO: refine it!
+    """
     code: Any = None
     public_param: Any = None
     private_param: Any = None
