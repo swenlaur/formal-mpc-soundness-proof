@@ -1,7 +1,10 @@
+from data_types import ValueType
+from data_types import ValueTypeLabel
 from data_types import InstanceLabel
 from data_types import NullInstance
 from data_types import InstanceState
 from data_types import PinnedLocation
+from data_types import MemoryLocation
 
 from network_components import LocalMemory
 from network_components import LeakyBuffer
@@ -64,8 +67,15 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         # It can stop only with the following instructions: Sleep, Send, DMACall
         # The state of registries allows me to recover the interpreter outcome
         #volatile_state: VolatileState = self.get_volatile_state()
-
+        _ = self
         return []
+
+    def get_incoming_message_address(self) -> Tuple[InstanceLabel, List[Tuple[ValueTypeLabel, MemoryLocation]]]:
+        pass
+
+    def get_outgoing_message_address(self) -> Tuple[InstanceLabel, List[Tuple[ValueTypeLabel, MemoryLocation]]]:
+        pass
+
 
     def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
@@ -105,8 +115,15 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         """
         Simulates the execution following to the clocking of an outgoing buffer.
         - The message is clocked out of the simulated outgoing buffer
+        - Makes sure that the memory locations referenced by the DMA message are overwritten.
+        This guarantees that the ideal functionality fetches the same message that comes out form simulated buffer
         """
-        self.simulated_outgoing_buffers[output_port].clock_message(msg_index)
+        msg = self.simulated_outgoing_buffers[output_port].clock_message(msg_index)
+        if self.corrupted:
+            # Split message and overwrite memory locations
+            instance, locations = self.get_outgoing_message_address()
+            for v_type, v_loc, value in zip(locations, msg):
+                self.memory_module[instance][v_type][v_loc] = value
         return None
 
     # def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
@@ -154,8 +171,7 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
 
-        self.simulated_outgoing_buffers  # Add stuff inti it
-        # return self.outgoing_buffers[input_port].write_message(msg)
+        self.simulated_outgoing_buffers[int].write_message(msg)
         return None
 
     def write_to_interpreter(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
@@ -168,24 +184,19 @@ class DummyAdversarialAdapter(AdversarialAdapter):
           * and the last port corresponds to the environment.
         - Returns a list of port labels and corresponding messages the interpreter has decided to write into
           outgoing buffers. As the party is corrupted the adversary must decide what to do with this further.
+
+        # Important: we know that this happens after incoming message is clocked and we are going to write
+        exactly to this point of time
         """
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
 
-        volatile_state = self.get_volatile_state()
-
-        # Find out the protocol instance
-        instance = InstanceLabel()
-
-        program_counter = volatile_state.program_counters[instance]
-
-        # Find out the pending DMA instruction
-        # write stuff to the right place in the memory
-
-        # Clock incoming buffer to wake up the interpreter
-
-        # Find out what the interpreter wrote and to where
-
-        # TODO: ??
-        return self.interpreter(input_port, msg)
+        # Check that message corresponds to the shape it has to be
+        # It must be due to DMA instructions structure
+        # Split message and overwrite memory locations
+        instance, locations = self.get_incoming_message_address()
+        for v_type, v_loc, value in zip(locations, msg):
+            self.memory_module[instance][v_type][v_loc] = value
+        # Do nothing
+        return None
 
