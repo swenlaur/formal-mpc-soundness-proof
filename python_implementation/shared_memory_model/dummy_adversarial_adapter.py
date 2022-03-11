@@ -25,6 +25,7 @@ class DummyAdversarialAdapter(AdversarialAdapter):
     Adversarial adapter that violates all memory access restrictions but manages to simulate the original
     protocol execution in the basic model. Meant to get going with the simulation.
     There are small differences in the description of complete execution but these are convenience changes.
+    More refined explanations are in function comments.
 
     Simulation goals:
     - Simulated buffers have the same state as in basic-model
@@ -62,20 +63,27 @@ class DummyAdversarialAdapter(AdversarialAdapter):
             locations=[(VolatileStateType(), PinnedLocation())])[0]
 
     def get_interpreter_outcome(self) -> List[Tuple[int, Any]]:
-        # Simulate execution of interpreter.
-        # Note that the interpreter has already executed next step and stopped
-        # It can stop only with the following instructions: Sleep, Send, DMACall
-        # The state of registries allows me to recover the interpreter outcome
-        #volatile_state: VolatileState = self.get_volatile_state()
-        _ = self
-        return []
-
-    def get_incoming_message_address(self) -> Tuple[InstanceLabel, List[Tuple[ValueTypeLabel, MemoryLocation]]]:
-        pass
+        """
+        Extracts what messages the interpreter has "written" to the output ports.
+        Of course, the interpreter just writes these to memory locations, and thus we must assemble the message.
+        For that we need to know the details of last executed instruction:
+        - protocol instance
+        - sub-protocol instances
+        - message locations
+        """
+        volatile_state: VolatileState = self.get_volatile_state()
+        protocol_instance, sub_protocol_instance = volatile_state.last_call
+        writes = []
+        for output_port, locations in volatile_state.pending_writes[protocol_instance, sub_protocol_instance]:
+            writes.append((output_port, self.memory_module.read(protocol_instance, locations)))
+        return writes
 
     def get_outgoing_message_address(self) -> Tuple[InstanceLabel, List[Tuple[ValueTypeLabel, MemoryLocation]]]:
+        """
+        Extracts where are 
+        :return:
+        """
         pass
-
 
     def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
@@ -99,7 +107,10 @@ class DummyAdversarialAdapter(AdversarialAdapter):
 
     def clock_incoming_buffer(self, input_port: int, msg_index: int) -> Optional[Tuple[int, Any]]:
         """
-        Simulates the execution following to the clocking of an incoming buffer.
+        Adversarial adaptor always forward the clocking signal to the DMA reply buffer.
+        This activates the corresponding interpreter which then stops and control goes back
+        to adversarial adaptor which now has to fake the response from corruption module.
+        To keep consistent simulation state the following actions are performed
         - The message is clocked out of the simulated ingoing buffer
         - The corresponding response of the corruption module is simulated
         """
@@ -126,77 +137,23 @@ class DummyAdversarialAdapter(AdversarialAdapter):
                 self.memory_module[instance][v_type][v_loc] = value
         return None
 
-    # def __call__(self, input_port: int, msg: Any) -> Optional[Tuple[int, Any]]:
-    #     """
-    #     Simulates how the corruption module processes inputs from incoming buffers.
-    #     - When the party is honest invokes the interpreter and stops without output.
-    #     - When the party is corrupted returns the input (input port and message) to the adversary.
-    #     - In both cases the output formally goes to the adversary but this is empty when the party is honest.
-    #     """
-    #     volatile_state: VolatileState = self.get_volatile_state()
-    #     if self.corrupted:
-    #         # find out (t1, t2) and take out the corresponding message form simulated incoming port
-    #         # It has to be the outgoing message in the queue
-    #
-    #         return input_port, msg
-    #     else:
-    #         # This part is functionally the same but only notifications go over the
-    #         # but we must simulate the actual messages put into the buffers
-    #         for port, msg in self.interpreter(input_port, msg):
-    #             self.outgoing_buffers[port].write_message(msg)
-    #
-    #             # Lets extract the message the interpreter intended to write to the buffer
-    #
-    #             # we first need a protocol instance. This is known to the adversary
-    #             # We can get that by making this public
-    #             instance = InstanceLabel()
-    #             program_counter = volatile_state.program_counters[instance]
-    #
-    #             # Find out the code line
-    #
-    #             # if we have direct addressing read the value from memory
-    #
-    #             # if we have indirect addressing read the values by doing indirection
-    #
-    #             self.simulated_incoming_buffers # Add stuff into it
-    #
-    #         return None
-
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
         """
-        Simulates adversarial write to outgoing buffers in the original collection:
-        - Adversary can write a message to the outgoing buffers when the party is corrupted.
-        - As a result message is written to the desired buffer and the control is given back.
+        Simulates adversarial write to outgoing buffers in the original collection.
+        As the adaptor corrupts memory locations read by ideal functionalities just before
+        messages are clocked to their input ports we can just write messages into simulated buffer.
         """
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
-
         self.simulated_outgoing_buffers[int].write_message(msg)
         return None
 
     def write_to_interpreter(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
         """
-        Simulates adversarial write to the interpreter in the original collection:
-        - Adversary can send a message to the interpreter when the party is corrupted.
-        - The input port indicates to the interpreter behalf of whom messages was sent and to whom to send reply.
-        - The port numbering matches the numbering of out going buffers:
-          * the first k ports correspond to ideal functionalities,
-          * and the last port corresponds to the environment.
-        - Returns a list of port labels and corresponding messages the interpreter has decided to write into
-          outgoing buffers. As the party is corrupted the adversary must decide what to do with this further.
-
-        # Important: we know that this happens after incoming message is clocked and we are going to write
-        exactly to this point of time
+        Simulates adversarial write to the interpreter in the original collection.
+        As the message has already successfully reached the stateless interpreter
+        we need to fetch the messages that interpreter has written to the ports.
         """
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
-
-        # Check that message corresponds to the shape it has to be
-        # It must be due to DMA instructions structure
-        # Split message and overwrite memory locations
-        instance, locations = self.get_incoming_message_address()
-        for v_type, v_loc, value in zip(locations, msg):
-            self.memory_module[instance][v_type][v_loc] = value
-        # Do nothing
-        return None
-
+        return self.get_interpreter_outcome()

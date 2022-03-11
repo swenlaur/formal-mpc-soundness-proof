@@ -86,8 +86,11 @@ while action is not None:
         reply = adversarial_adapters[action.party].corrupt_party()
         action = adversary.next_action(reply)
     elif isinstance(action, ClockIncomingBuffer):
+        # Adapter passes the clocking signal directly to clocking port
         msg = incoming_buffers[action.target, action.source].clock_message(action.msg_index)
         interpreters[action.target](action.source, msg)
+        # Control goes back to adversarial adapter that now starts next simulation step to compute reply
+        # to the lazy adversary that expects the outcome from corruption module.
         reply = adversarial_adapters[action.target].clock_incoming_buffer(action.source, action.msg_index)
         action = adversary.next_action(reply)
     elif isinstance(action, ClockOutgoingBuffer):
