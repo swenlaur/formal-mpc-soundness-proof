@@ -68,6 +68,7 @@ for i, corruption_module in enumerate(corruption_modules):
     corruption_module.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
 for j, functionality in enumerate(ideal_functionalities):
     functionality.set_outgoing_buffers([incoming_buffers[i, j] for i in range(n)])
+environment.set_outgoing_buffers([incoming_buffers[i, k+1] for i in range(n)])
 
 # Set up the adversary
 public_param, private_param = parameter_set[n + k]

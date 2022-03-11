@@ -1,8 +1,7 @@
-
-from shared_components import Environment
-from shared_components import TrustedSetup
-from shared_components import ParentParty
-from shared_components import ProtocolDescription
+from data_types import ProtocolDescription
+from network_components import Environment
+from network_components import TrustedSetup
+from network_components import ParentParty
 
 from basic_model import LazyAdversary
 from shared_memory_model import StatelessInterpreter
@@ -32,7 +31,7 @@ k = 2
 
 # Generate protocol parameters
 f_setup = TrustedSetup(n, k)
-parameter_set = f_setup.generate_parameters()
+parameter_set = f_setup()
 protocol_description = ProtocolDescription()
 
 # Set up environment
@@ -44,30 +43,34 @@ environment = Environment(parent_parties)
 # Initialise protocol parties
 interpreters: List[StatelessInterpreter] = [None] * n
 memory_modules: List[LocalMemory] = [None] * n
-adversarial_adapters: List[DummyAdversarialAdapter]
+adversarial_adapters: List[DummyAdversarialAdapter] = [None] * n
 
 for i, pk, sk in enumerate(parameter_set[:n]):
     memory_modules[i] = LocalMemory()
     interpreters[i] = StatelessInterpreter(pk, sk, protocol_description[i], k + 1, memory_modules[i])
+    adversarial_adapters[i] = DummyAdversarialAdapter(memory_modules[i])
 
 ideal_functionalities: List[DMAFunctionality] = [None] * k
 for i, pk, sk in enumerate(parameter_set[n:n+k]):
-    ideal_functionalities[i] = DMAFunctionality(pk, sk)
+    ideal_functionalities[i] = DMAFunctionality(pk, sk, memory_modules)
 
-set_clockable_buffers
 # Initialise protocol wiring. Buffers are indexed with integers for universality
 incoming_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
 outgoing_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
+
 for i, p in enumerate(interpreters):
     for j, f in enumerate(ideal_functionalities + [environment]):
         incoming_buffers[i, j] = LeakyBuffer(InputPort(f, i), OutputPort(p, i))
         outgoing_buffers[i, j] = LeakyBuffer(InputPort(p, i), OutputPort(f, i))
 
 # Complete setup by specifying outgoing buffers
-for i, corruption_module in enumerate(corruption_modules):
-    corruption_module.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
+for i, interpreter in enumerate(interpreters):
+    interpreter.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
 for j, functionality in enumerate(ideal_functionalities):
     functionality.set_outgoing_buffers([incoming_buffers[i, j] for j in range(n)])
+environment.set_outgoing_buffers([incoming_buffers[i, k+1] for i in range(n)])
+
+
 
 # Set up the adversary
 public_param, private_param = parameter_set[n + k]
