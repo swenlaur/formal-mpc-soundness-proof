@@ -27,11 +27,11 @@ class VolatileState(ValueType):
     program_counters: Dict[InstanceLabel, int] = field(default_factory=dict)
     pending_writes: Dict[
         Tuple[InstanceLabel, InstanceLabel],
-        Tuple[int, List[Tuple[ValueTypeLabel, MemoryLocation]]]
+        Dict[int, List[Tuple[ValueTypeLabel, MemoryLocation]]]
     ] = field(default_factory=dict)
     pending_reads: Dict[
         Tuple[InstanceLabel, InstanceLabel],
-        Tuple[int, List[Tuple[ValueTypeLabel, MemoryLocation]]]
+        Dict[int, List[Tuple[ValueTypeLabel, MemoryLocation]]]
     ] = field(default_factory=dict)
     last_call: Optional[Tuple[InstanceLabel, InstanceLabel]] = None
 

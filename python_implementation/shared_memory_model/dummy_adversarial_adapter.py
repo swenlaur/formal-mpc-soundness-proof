@@ -78,12 +78,19 @@ class DummyAdversarialAdapter(AdversarialAdapter):
             writes.append((output_port, self.memory_module.read(protocol_instance, locations)))
         return writes
 
-    def get_outgoing_message_address(self) -> Tuple[InstanceLabel, List[Tuple[ValueTypeLabel, MemoryLocation]]]:
+    def get_outgoing_message_address(
+            self,
+            protocol_instance: InstanceLabel,
+            sub_protocol_instance: InstanceLabel,
+            output_port: int) -> List[Tuple[ValueTypeLabel, MemoryLocation]]:
         """
-        Extracts where are 
-        :return:
+        Extracts which memory locations are used to create the message tuple to be sent.
+        As the interpreter may run several protocol instances and each instance may call out several sub-protocols,
+        one needs to specify both the protocol, sub-protocol instances and the output port.
+        Due to the tight scheduling requirement this uniquely determines the message.
         """
-        pass
+        volatile_state: VolatileState = self.get_volatile_state()
+        return volatile_state.pending_writes[protocol_instance, sub_protocol_instance][output_port]
 
     def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
@@ -132,9 +139,9 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         msg = self.simulated_outgoing_buffers[output_port].clock_message(msg_index)
         if self.corrupted:
             # Split message and overwrite memory locations
-            instance, locations = self.get_outgoing_message_address()
-            for v_type, v_loc, value in zip(locations, msg):
-                self.memory_module[instance][v_type][v_loc] = value
+            protocol_instance, sub_protocol_instance, values = msg
+            locations = self.get_outgoing_message_address(protocol_instance, sub_protocol_instance, output_port)
+            self.memory_module.write([protocol_instance, locations, values)
         return None
 
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
