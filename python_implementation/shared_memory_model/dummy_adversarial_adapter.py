@@ -1,4 +1,3 @@
-from data_types import ValueType
 from data_types import ValueTypeLabel
 from data_types import InstanceLabel
 from data_types import NullInstance
@@ -141,7 +140,7 @@ class DummyAdversarialAdapter(AdversarialAdapter):
             # Split message and overwrite memory locations
             protocol_instance, sub_protocol_instance, values = msg
             locations = self.get_outgoing_message_address(protocol_instance, sub_protocol_instance, output_port)
-            self.memory_module.write([protocol_instance, locations, values)
+            self.memory_module.write(protocol_instance, locations, values)
         return None
 
     def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> None:
@@ -163,4 +162,6 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         """
         assert self.corrupted
         assert 0 <= input_port < len(self.outgoing_buffers)
+        _ = msg
         return self.get_interpreter_outcome()
+    
