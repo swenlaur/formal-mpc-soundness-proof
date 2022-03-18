@@ -1,5 +1,6 @@
 from data_types import InstanceLabel
 from data_types import InstanceState
+from data_types import WriteInstructions
 from network_components import Queue
 from network_components import Machine
 
@@ -14,7 +15,7 @@ class StatefulInterpreter(Machine):
     Interpreter can use public and private parameters to interpret code.
     The code is protocol specific, but it can be set only once.
     The interpreter can execute several protocol instances with separate states.
-    Interpreter will be controlled by the corruption module who invokes it and patches its output
+    Interpreter will be controlled by the protocol party who invokes it and patches its output
     """
 
     def __init__(self, public_param: Any, private_param: Any, code: Any, port_count: int):
@@ -23,20 +24,21 @@ class StatefulInterpreter(Machine):
 
         self.code = code
         self.state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {}
+        self.port_count = port_count
         self.input_queues: List[Queue] = [Queue()] * port_count
 
-    def __call__(self, input_port: int, msg: Any) -> List[Tuple[int, Any]]:
+    def __call__(self, input_port: int, msg: Any) -> WriteInstructions:
         """
         Processes messages coming form ideal functionalities or the environment.
         Returns a list of port labels and corresponding messages the interpreter wants to write into buffers.
         The port numbering matches the numbering of out going buffers:
-        * the first k ports correspond to ideal functionalities,
-        * and the last port corresponds to the environment.
+        * The first k ports correspond to ideal functionalities.
+        * The k-th port corresponds to the environment.
         """
-        assert 0 <= input_port < len(self.input_queues)
+        assert 0 <= input_port < self.port_count
         self.input_queues[input_port].add(msg)
         protocol_instance: InstanceLabel = self.get_protocol_instance(msg)
-        writing_instructions: List[Tuple[int, Any]] = []
+        writing_instructions: WriteInstructions = []
 
         # TODO: add interpreter code here!
         _ = protocol_instance
