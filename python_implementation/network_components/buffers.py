@@ -1,6 +1,5 @@
 from typing import Any
 from typing import List
-from typing import Callable
 
 
 class Buffer:
@@ -30,9 +29,6 @@ class LeakyBuffer(Buffer):
     The one who calls peek_message(...) and clock_message(...) functions is the clocker.
     This has to be a single machine.
     """
-
-    leak_function: Callable[[Any], Any] = lambda msg: msg[0]
-
     def __init__(self):
         super().__init__()
 
@@ -40,3 +36,7 @@ class LeakyBuffer(Buffer):
         assert self.leak_function
         assert 0 <= n < len(self.messages)
         return self.leak_function(self.messages[n])
+
+    @staticmethod
+    def leak_function(msg: Any) -> Any:
+        return msg[0]
