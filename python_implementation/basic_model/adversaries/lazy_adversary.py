@@ -1,4 +1,3 @@
-from network_components import Machine
 from adversarial_actions import AdversarialAction
 
 from typing import Any
@@ -25,10 +24,9 @@ class LazyAdversary:
     fulfilled and not forced by the code structure.
     """
 
-    def __init__(self, public_param: Any, private_param: Any, environment: Machine):
+    def __init__(self, public_param: Any, private_param: Any):
         self.public_param: Any = public_param
         self.private_param: Any = private_param
-        self.environment: Machine = environment
 
     def next_action(self, arg: Any) -> AdversarialAction:
         pass

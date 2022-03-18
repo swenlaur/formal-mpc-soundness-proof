@@ -46,11 +46,11 @@ for i, pk, sk in enumerate(parameter_set[n:n+k]):
 
 # Set up the adversary
 public_param, private_param = parameter_set[n + k]
-adversary = LazyAdversary(public_param, private_param, environment)  # TODO: remove env from the adversary
+adversary = LazyAdversary(public_param, private_param)
 
 # Initialise protocol wiring. The first index marks protocol party. The second index marks ideal functionality.
-incoming_buffers: Dict[int, Dict[int, LeakyBuffer]] = {i: {j: LeakyBuffer() for j in range(k + 1)} for j in range(n)}
-outgoing_buffers: Dict[int, Dict[int, LeakyBuffer]] = {i: {j: LeakyBuffer() for j in range(k + 1)} for j in range(n)}
+incoming_buffers: Dict[int, Dict[int, LeakyBuffer]] = {i: {j: LeakyBuffer() for j in range(k + 1)} for i in range(n)}
+outgoing_buffers: Dict[int, Dict[int, LeakyBuffer]] = {i: {j: LeakyBuffer() for j in range(k + 1)} for i in range(n)}
 
 # Complete execution
 action = adversary.next_action(None)

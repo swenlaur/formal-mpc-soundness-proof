@@ -1,4 +1,4 @@
-from data_types import ProtocolDescription
+from data_types import protocol_description
 from network_components import Environment
 from network_components import trusted_setup
 from network_components import ParentParty
@@ -28,7 +28,7 @@ k = 2
 
 # Generate protocol parameters
 parameter_set = trusted_setup()
-protocol_description = ProtocolDescription()
+protocol_description = protocol_description()
 
 # Set up environment
 # noinspection PyTypeChecker
@@ -64,16 +64,9 @@ for i, p in enumerate(interpreters):
         incoming_buffers[i, j] = LeakyBuffer()
         outgoing_buffers[i, j] = LeakyBuffer()
 
-# Complete setup by specifying outgoing buffers
-for i, interpreter in enumerate(interpreters):
-    interpreter.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
-for j, functionality in enumerate(ideal_functionalities):
-    functionality.set_outgoing_buffers([incoming_buffers[i, j] for i in range(n)])
-environment.set_outgoing_buffers([incoming_buffers[i, k+1] for i in range(n)])
-
 # Set up the adversary
 public_param, private_param = parameter_set[n + k]
-adversary = LazyAdversary(public_param, private_param, environment)
+adversary = LazyAdversary(public_param, private_param)
 
 # Complete execution
 action = adversary.next_action(None)

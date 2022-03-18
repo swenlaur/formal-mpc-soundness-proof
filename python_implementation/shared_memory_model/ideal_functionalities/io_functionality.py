@@ -1,4 +1,3 @@
-from network_components import LeakyBuffer
 from network_components import LocalMemory
 
 from typing import Any

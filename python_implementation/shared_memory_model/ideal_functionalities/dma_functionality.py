@@ -1,8 +1,9 @@
-from network_components import LeakyBuffer
+from data_types import InstanceLabel
 from network_components import LocalMemory
 
 from typing import Any
 from typing import List
+from typing import Tuple
 from typing import Optional
 
 
@@ -19,12 +20,9 @@ class DMAFunctionality:
     """
     def __init__(self, public_param: Any, private_param: Any, memory_modules: List[LocalMemory]):
         self.memory_modules: List[LocalMemory] = memory_modules
-
-    def set_outgoing_buffers(self, outgoing_buffers: List[LeakyBuffer]):
-        """
-        To complete the setup one must specify leaky output buffers to protocol parties.
-        """
-        self.sharing_module.outgoing_buffers = outgoing_buffers
+        self.reconstruction_module = None
+        self.sharing_module = None
+        self.computation_module = None
 
     def __call__(self, input_port: int, msg: Any) -> Optional[Any]:
         pass
@@ -51,3 +49,6 @@ class DMAFunctionality:
 
         elif module == 's':
             self.sharing_module.adversarial_probe(instance, caller, data)
+
+    def expand_message(self, msg: Any) -> Tuple[InstanceLabel, InstanceLabel, Any]:
+        pass
