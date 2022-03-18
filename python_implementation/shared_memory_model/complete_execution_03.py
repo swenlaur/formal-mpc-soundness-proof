@@ -9,8 +9,6 @@ from shared_memory_model import DMAFunctionality
 from shared_memory_model import DummyAdversarialAdapter
 
 from network_components import LeakyBuffer
-from network_components import InputPort
-from network_components import OutputPort
 from network_components import LocalMemory
 
 

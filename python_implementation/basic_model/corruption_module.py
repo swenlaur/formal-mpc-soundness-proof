@@ -22,10 +22,10 @@ class CorruptionModule(Machine):
     * Setup parameters must be passed form the trusted setup.
     """
 
-    def __init__(self, interpreter: StatefulInterpreter):
+    def __init__(self,  public_param: Any, private_param: Any, code: Any, port_count: int):
         self.corrupted = False
         self.outgoing_buffers: List[LeakyBuffer] = []
-        self.interpreter: StatefulInterpreter = interpreter
+        self.interpreter: StatefulInterpreter = StatefulInterpreter(public_param, private_param, code, port_count)
 
     def set_outgoing_buffers(self, outgoing_buffers: List[LeakyBuffer]):
         """

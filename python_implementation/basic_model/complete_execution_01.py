@@ -6,8 +6,6 @@ from basic_model import LazyAdversary
 from basic_model import CorruptionModule
 
 from network_components import LeakyBuffer
-from network_components import InputPort
-from network_components import OutputPort
 from network_components import ParentParty
 from network_components import Environment
 from network_components import trusted_setup
@@ -45,8 +43,7 @@ interpreters: List[StatefulInterpreter] = [None] * n
 # noinspection PyTypeChecker
 corruption_modules: List[CorruptionModule] = [None] * n
 for i, pk, sk in enumerate(parameter_set[:n]):
-    interpreters[i] = StatefulInterpreter(pk, sk, protocol_description[i], k + 1)
-    corruption_modules[i] = CorruptionModule(interpreters[i])
+    corruption_modules[i] = CorruptionModule(pk, sk, protocol_description[i], k + 1)
 
 # noinspection PyTypeChecker
 ideal_functionalities: List[StandardFunctionality] = [None] * k
