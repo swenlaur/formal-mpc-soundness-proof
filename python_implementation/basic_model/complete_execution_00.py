@@ -1,6 +1,5 @@
-from data_types import ProtocolDescription
+from data_types import protocol_description
 
-from basic_model import StatefulInterpreter
 from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
 from basic_model import ProtocolParty
@@ -28,7 +27,7 @@ k: int = 2
 
 # Generate protocol parameters
 parameter_set = trusted_setup()
-protocol_description = ProtocolDescription()
+protocol_description = protocol_description()
 
 # Set up environment
 # noinspection PyTypeChecker
@@ -38,8 +37,6 @@ for i, pk, sk in enumerate(parameter_set[:n]):
 environment = Environment(parent_parties)
 
 # Initialise protocol parties
-# noinspection PyTypeChecker
-interpreters: List[StatefulInterpreter] = [None] * n
 # noinspection PyTypeChecker
 corruption_modules: List[ProtocolParty] = [None] * n
 for i, pk, sk in enumerate(parameter_set[:n]):
@@ -53,15 +50,16 @@ for i, pk, sk in enumerate(parameter_set[n:n+k]):
 # Initialise protocol wiring. Buffers are indexed with integers for universality
 incoming_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
 outgoing_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
-for i, p in enumerate(interpreters):
+for i, p in enumerate(corruption_modules):
     # noinspection PyTypeChecker
     for j, f in enumerate(ideal_functionalities + [environment]):
         incoming_buffers[i, j] = LeakyBuffer()
         outgoing_buffers[i, j] = LeakyBuffer()
 
 # Complete setup by specifying outgoing buffers
-for i, corruption_module in enumerate(corruption_modules):
-    corruption_module.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
+# for i, corruption_module in enumerate(corruption_modules):
+#    corruption_module.set_outgoing_buffers([outgoing_buffers[i, j] for j in range(k + 1)])
+
 for j, functionality in enumerate(ideal_functionalities):
     functionality.set_outgoing_buffers([incoming_buffers[i, j] for i in range(n)])
 environment.set_outgoing_buffers([incoming_buffers[i, k+1] for i in range(n)])

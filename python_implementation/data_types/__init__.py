@@ -8,4 +8,4 @@ from .instance_state import InstanceState
 from .write_instructions import WriteInstructions
 
 from .code import Code
-from .protocol_description import ProtocolDescription
+from .protocol_description import protocol_description

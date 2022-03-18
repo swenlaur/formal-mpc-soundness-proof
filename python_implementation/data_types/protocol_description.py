@@ -1,10 +1,10 @@
 from .code import Code
 
+from typing import List
 
-class ProtocolDescription:
-    """
-    Singleton class for protocol description
-    """
 
-    def __getitem__(self, item: int) -> Code:
-        pass
+def protocol_description() -> List[Code]:
+    """
+    Protocol description is a tuple of individual instructions to each protocol party.
+    """
+    pass
