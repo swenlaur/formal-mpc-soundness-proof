@@ -3,6 +3,7 @@ from .buffers import LeakyBuffer
 
 from typing import Any
 from typing import List
+from typing import Optional
 
 
 class Environment(Machine):
@@ -14,6 +15,9 @@ class Environment(Machine):
         self.parent_parties: List[Machine] = parent_parties
         self.outgoing_buffers: List[LeakyBuffer] = []
 
+    def __call__(self, input_port: int, msg: Any) -> Optional[Any]:
+        pass
+
     def set_outgoing_buffers(self, outgoing_buffers: List[LeakyBuffer]):
         """
         To complete the setup one must specify leaky output buffers towards protocol parties.
@@ -22,7 +26,6 @@ class Environment(Machine):
 
     def adversarial_probe(self, msg: Any) -> Any:
         pass
-
 
     # noinspection PyPropertyDefinition
     @property

@@ -1,15 +1,14 @@
 from network_components import LeakyBuffer
-from network_components import InstanceLabel
-from network_components import NullInstance
 from network_components import Queue
 
 from network_components import Machine
 from network_components import LocalMemory
 
-from data_types import VolatileState
-from data_types import VolatileStateType
+from .volatile_state import VolatileState
+from .volatile_state import VolatileStateType
 from data_types import PinnedLocation
-
+from data_types import InstanceLabel
+from data_types import NullInstance
 
 from typing import Any
 from typing import List

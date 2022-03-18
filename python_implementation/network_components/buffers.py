@@ -1,9 +1,5 @@
-from network_components import InputPort
-from network_components import OutputPort
-
 from typing import Any
 from typing import List
-from typing import Tuple
 from typing import Callable
 
 
@@ -38,7 +34,7 @@ class LeakyBuffer(Buffer):
     leak_function: Callable[[Any], Any] = lambda msg: msg[0]
 
     def __init__(self):
-        super().__init__(input_port, output_port)
+        super().__init__()
 
     def peek_message(self, n: int) -> Any:
         assert self.leak_function

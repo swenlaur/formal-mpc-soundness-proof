@@ -10,7 +10,7 @@ from network_components import InputPort
 from network_components import OutputPort
 from network_components import ParentParty
 from network_components import Environment
-from network_components import TrustedSetup
+from network_components import trusted_setup
 
 from adversarial_actions import CorruptParty
 from adversarial_actions import ClockIncomingBuffer
@@ -29,8 +29,7 @@ n: int = 2
 k: int = 2
 
 # Generate protocol parameters
-f_setup = TrustedSetup(n, k)
-parameter_set = f_setup()
+parameter_set = trusted_setup()
 protocol_description = ProtocolDescription()
 
 # Set up environment
@@ -60,8 +59,8 @@ outgoing_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
 for i, p in enumerate(interpreters):
     # noinspection PyTypeChecker
     for j, f in enumerate(ideal_functionalities + [environment]):
-        incoming_buffers[i, j] = LeakyBuffer(InputPort(f, i), OutputPort(p, i))
-        outgoing_buffers[i, j] = LeakyBuffer(InputPort(p, i), OutputPort(f, i))
+        incoming_buffers[i, j] = LeakyBuffer()
+        outgoing_buffers[i, j] = LeakyBuffer()
 
 # Complete setup by specifying outgoing buffers
 for i, corruption_module in enumerate(corruption_modules):

@@ -164,4 +164,3 @@ class DummyAdversarialAdapter(AdversarialAdapter):
         assert 0 <= input_port < len(self.outgoing_buffers)
         _ = msg
         return self.get_interpreter_outcome()
-    

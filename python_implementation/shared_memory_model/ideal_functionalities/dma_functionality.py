@@ -3,6 +3,7 @@ from network_components import LocalMemory
 
 from typing import Any
 from typing import List
+from typing import Optional
 
 
 class DMAFunctionality:
@@ -25,6 +26,8 @@ class DMAFunctionality:
         """
         self.sharing_module.outgoing_buffers = outgoing_buffers
 
+    def __call__(self, input_port: int, msg: Any) -> Optional[Any]:
+        pass
 
     def adversarial_probe(self, module: str,  msg: Any) -> Any:
         """

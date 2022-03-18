@@ -1,6 +1,6 @@
 from data_types import ProtocolDescription
 from network_components import Environment
-from network_components import TrustedSetup
+from network_components import trusted_setup
 from network_components import ParentParty
 
 from basic_model import LazyAdversary
@@ -9,15 +9,12 @@ from shared_memory_model import DMAFunctionality
 from shared_memory_model import DummyAdversarialAdapter
 
 from network_components import LeakyBuffer
-from network_components import InputPort
-from network_components import OutputPort
 from network_components import LocalMemory
 
 
 from adversarial_actions import CorruptParty
 from adversarial_actions import ClockIncomingBuffer
 from adversarial_actions import ClockOutgoingBuffer
-from adversarial_actions import SendIncomingMessage
 from adversarial_actions import SendOutgoingMessage
 from adversarial_actions import QueryFunctionality
 from adversarial_actions import InvokeEnvironment
@@ -30,8 +27,7 @@ n = 2
 k = 2
 
 # Generate protocol parameters
-f_setup = TrustedSetup(n, k)
-parameter_set = f_setup()
+parameter_set = trusted_setup()
 protocol_description = ProtocolDescription()
 
 # Set up environment
@@ -65,8 +61,8 @@ outgoing_buffers: Dict[Tuple[int, int], LeakyBuffer] = {}
 for i, p in enumerate(interpreters):
     # noinspection PyTypeChecker
     for j, f in enumerate(ideal_functionalities + [environment]):
-        incoming_buffers[i, j] = LeakyBuffer(InputPort(f, i), OutputPort(p, i))
-        outgoing_buffers[i, j] = LeakyBuffer(InputPort(p, i), OutputPort(f, i))
+        incoming_buffers[i, j] = LeakyBuffer()
+        outgoing_buffers[i, j] = LeakyBuffer()
 
 # Complete setup by specifying outgoing buffers
 for i, interpreter in enumerate(interpreters):
@@ -95,7 +91,7 @@ while action is not None:
         interpreters[action.target](action.source, msg)
         adversarial_adapters[action.target].clock_incoming_buffer(action.source, action.msg_index)
         adversary.next_action((action.source, msg))
-        reply = adversarial_adapters[action.target].write_to_interpreter(action.source, action.msg)
+        reply = adversarial_adapters[action.target].write_to_interpreter(action.source, msg)
         action = adversary.next_action(reply)
     elif isinstance(action, ClockOutgoingBuffer):
         adversarial_adapters[action.source].clock_outgoing_buffer(action.target, action.msg_index)

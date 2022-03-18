@@ -1,10 +1,10 @@
 from network_components import Machine
-from network_components import InstanceLabel
 
 from data_types import ValueType
 from data_types import ValueTypeLabel
 from data_types import MemoryLocation
 from data_types import InstanceState
+from data_types import InstanceLabel
 
 
 from typing import Dict
