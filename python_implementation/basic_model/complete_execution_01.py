@@ -3,7 +3,7 @@ from data_types import ProtocolDescription
 from basic_model import StatefulInterpreter
 from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
-from basic_model import CorruptionModule
+from basic_model import ProtocolParty
 
 from network_components import LeakyBuffer
 from network_components import ParentParty
@@ -41,9 +41,9 @@ environment = Environment(parent_parties)
 # noinspection PyTypeChecker
 interpreters: List[StatefulInterpreter] = [None] * n
 # noinspection PyTypeChecker
-corruption_modules: List[CorruptionModule] = [None] * n
+corruption_modules: List[ProtocolParty] = [None] * n
 for i, pk, sk in enumerate(parameter_set[:n]):
-    corruption_modules[i] = CorruptionModule(pk, sk, protocol_description[i], k + 1)
+    corruption_modules[i] = ProtocolParty(pk, sk, protocol_description[i], k + 1)
 
 # noinspection PyTypeChecker
 ideal_functionalities: List[StandardFunctionality] = [None] * k

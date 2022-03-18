@@ -12,9 +12,16 @@ from typing import Tuple
 from typing import Optional
 
 
-class CorruptionModule(Machine):
+class ProtocolParty(Machine):
     """
-    Corruption module controls how the interpreter interacts with outside world.
+    Protocol party controls how the interpreter interacts with outside world.
+
+    In the original model the protocol party is a collection of two machines:
+    * stateful interpreter
+    * corruption module
+    Here we formalise the behaviour of the collection without explicit definition of corruption module.
+    This makes it easier to formalise the behavior in terms pure functions.
+
     The module writes messages only to outgoing buffers or send them instantly to the adversary.
 
     To set up a corruption module two steps must be carried out:
