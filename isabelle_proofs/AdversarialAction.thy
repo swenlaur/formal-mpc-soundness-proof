@@ -1,3 +1,5 @@
+(* Sent this and DataTypes to Dominique as well, who will correct/feedback this. *)
+
 theory AdversarialAction
   imports Main DataTypes
 begin
