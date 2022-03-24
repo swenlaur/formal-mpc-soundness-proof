@@ -1,7 +1,7 @@
 theory DataTypes
   imports Main
 begin
-type_synonym message =" bool list"
+type_synonym message = "bool list"
 type_synonym partyID = nat
 type_synonym functionalityID = nat
 type_synonym portNumber = nat
