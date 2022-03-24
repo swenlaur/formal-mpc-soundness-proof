@@ -6,14 +6,14 @@ from .adversarial_action import AdversarialAction
 
 
 @dataclass
-class ClockIncomingBuffer(AdversarialAction):
+class PeekIncomingBuffer(AdversarialAction):
     source: FunctId
     target: PartyId
     msg_index: int
 
 
 @dataclass
-class ClockOutgoingBuffer(AdversarialAction):
+class PeekOutgoingBuffer(AdversarialAction):
     source: PartyId
     target: FunctId
     msg_index: int

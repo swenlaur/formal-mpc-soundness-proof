@@ -7,5 +7,8 @@ from .instance_labels import NullInstance
 from .instance_state import InstanceState
 from .write_instructions import WriteInstructions
 
+from labels import PartyId
+from labels import FunctId
+
 from .code import Code
 from .protocol_description import protocol_description

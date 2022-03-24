@@ -1,0 +1,2 @@
+PartyId = int
+FunctId = int
