@@ -10,15 +10,36 @@ but I'll aim to be really clear, at least. *)
 (* Sven has a separate "datatypes" folder. That doesn't exactly jive here? *)
 (* The Datatypes are quite interesting, but also a lot of them are empty?*)
 
-record clockBuffer = 
-  bufferSource :: partyID 
+(* Swen:
+   From technical viewpoint we can have only one data type for clock buffer
+   or even one buffer action
+
+record bufferAction =
+  party :: partyID
+  functionality :: functionalityID
+  direction :: {incoming| outgoing}
+  action :: {clock|peek}
+  msgIndex :: messageIndex
+
+  This means more explicit casing
+
+  if action.action == 'clock' and action.direction == 'incoming':
+      # clock incoming buffers
+
+  source and target fields are bad names since these would be in reverse
+  for incoming and outcoming actions
+  
+*)
+
+record clockBuffer =
+  bufferSource :: partyID
   bufferTarget :: functionalityID
   bufferMsgIndex :: messageIndex
 
 record corruptParty =
   corruptPartyID :: partyID
 
-record invokeEnvironment = 
+record invokeEnvironment =
   invokeMessage :: message
 
 record  sendMessage =
@@ -42,7 +63,7 @@ record sendOutgoingMessage =
   sendOMessage :: message *)
 
 
-record queryFunctionality = 
+record queryFunctionality =
   queryTarget :: functionalityID
   queryModule :: moduleType
   queryInstance :: string
@@ -51,7 +72,7 @@ record queryFunctionality =
 
 
 datatype adversarialAction =
-  ClockIncomingBuffer clockBuffer | 
+  ClockIncomingBuffer clockBuffer |
   ClockOutgoingBuffer clockBuffer |
   CorruptParty corruptParty |
   SendOutgoingMessage sendMessage |
