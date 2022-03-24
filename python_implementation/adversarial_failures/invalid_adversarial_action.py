@@ -1,0 +1,2 @@
+class InvalidAdversarialAction(Exception):
+    pass

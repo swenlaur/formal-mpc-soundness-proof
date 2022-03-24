@@ -1,0 +1,2 @@
+class ProtocolFailure(Exception):
+    pass

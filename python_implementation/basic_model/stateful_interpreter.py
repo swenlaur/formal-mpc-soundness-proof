@@ -3,6 +3,7 @@ from data_types import InstanceState
 from data_types import WriteInstructions
 from network_components import Queue
 from network_components import Machine
+from adversarial_failures import ProtocolFailure
 
 from typing import Any
 from typing import List
@@ -35,7 +36,9 @@ class StatefulInterpreter(Machine):
         * The first k ports correspond to ideal functionalities.
         * The k-th port corresponds to the environment.
         """
-        assert 0 <= input_port < self.port_count
+        if input_port < 0 or self.port_count <= input_port:
+            raise ProtocolFailure('Invalid input port')
+
         self.input_queues[input_port].add(msg)
         protocol_instance: InstanceLabel = self.get_protocol_instance(msg)
         writing_instructions: WriteInstructions = []
