@@ -1,17 +1,42 @@
 theory DataTypes
   imports Main
 begin
-type_synonym message = "bool list"
-type_synonym partyID = nat
-type_synonym functionalityID = nat
-type_synonym portNumber = nat
-type_synonym messageIndex = nat
-type_synonym moduleType = char
 
-(*the data_types material
- (code, instance labels, instance state, memory locations, 
-protocol descriptions, values, write instructions) 
-is highly unclear. What kinds of types should they be?
-What does it mean that most of them are empty?  *)
-type_synonym writeInstructions = "(portNumber \<times> message) list"
+(* Types made up for the project *)
+typedecl message
+typedecl partyID 
+typedecl functionalityID
+typedecl portNumber 
+typedecl messageIndex
+typedecl moduleType 
+
+(* Types from the Python code *)
+(* code.py *)
+typedecl code
+
+(* instance_labels.py *)
+typedecl instanceLabel
+typedecl nullInstanceLabel
+(* In Python, this inherits from IL *)
+
+(* values.py *)
+typedecl valueType
+typedecl valueTypeLabel
+
+(* memory_locations.py *)
+typedecl memoryLocation 
+typedecl pinnedMemoryLocation
+ (* Inheritance *)
+
+(* instance_state.py *)
+(*datatype instanceState = IS ? ? ? *)
+(* nested map / two-arg function option *)
+
+
+(* protocol_description.py *)
+datatype protocolDescription = PD "code list"
+
+(* write_instructions.py *)
+datatype WriteInstructions = WI "(portNumber × message) list"
+
 end
