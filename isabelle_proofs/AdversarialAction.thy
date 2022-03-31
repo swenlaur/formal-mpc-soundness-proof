@@ -23,7 +23,7 @@ record bufferAction =
  
 *)
 
-datatype dir = Incoming | Outgoing
+datatype dir = Incoming | Outgoing (* Incoming = to party , Outgoing = to functionality *)
 datatype act = Clock | Peek
 
 record bufferAction =
