@@ -21,6 +21,10 @@ class Buffer:
         assert 0 <= n < len(self.messages)
         return self.messages.pop(n)
 
+    @property
+    def empty(self) -> bool:
+        return len(self.messages) == 0
+
 
 class LeakyBuffer(Buffer):
     """

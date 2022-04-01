@@ -7,13 +7,13 @@ from .adversarial_action import AdversarialAction
 
 @dataclass
 class ClockIncomingBuffer(AdversarialAction):
-    source: FunctId
-    target: PartyId
+    party: PartyId
+    functionality: FunctId
     msg_index: int
 
 
 @dataclass
 class ClockOutgoingBuffer(AdversarialAction):
-    source: PartyId
-    target: FunctId
+    party: PartyId
+    functionality: FunctId
     msg_index: int

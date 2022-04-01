@@ -1,5 +1,7 @@
 from adversarial_action import AdversarialAction
 from corrupt_party import CorruptParty
+from peek_buffers import PeekIncomingBuffer
+from peek_buffers import PeekOutgoingBuffer
 from clock_buffers import ClockIncomingBuffer
 from clock_buffers import ClockOutgoingBuffer
 from send_messages import SendIncomingMessage

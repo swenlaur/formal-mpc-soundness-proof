@@ -1,2 +1,3 @@
 from .protocol_failure import ProtocolFailure
 from .invalid_adversarial_action import InvalidAdversarialAction
+from . is_not_semi_simplictic import IsNotSemiSimplistic

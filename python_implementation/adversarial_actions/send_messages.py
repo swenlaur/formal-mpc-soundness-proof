@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from data_types import InstanceLabel
+from data_types import PartyId
+from data_types import FunctId
 from .adversarial_action import AdversarialAction
 
 from typing import Any
@@ -7,15 +9,15 @@ from typing import Any
 
 @dataclass
 class SendOutgoingMessage(AdversarialAction):
-    source: int
-    target: int
+    party: PartyId
+    functionality: FunctId
     msg: Any
 
 
 @dataclass
 class SendIncomingMessage(AdversarialAction):
-    source: int
-    target: int
+    party: PartyId
+    functionality: FunctId
     msg: Any
 
 
