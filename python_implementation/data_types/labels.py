@@ -1,2 +1,2 @@
 PartyId = int
-FunctId = int
+FunctId = int  # Includes also environment
