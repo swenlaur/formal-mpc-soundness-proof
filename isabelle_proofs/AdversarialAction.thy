@@ -20,31 +20,33 @@ record bufferAction =
 
   source and target fields are bad names since these would be in reverse
   for incoming and outcoming actions
- 
+
+J: thanks! Incorporated it
+  
 *)
 
-datatype dir = Incoming | Outgoing (* Incoming = to party , Outgoing = to functionality *)
+datatype dir = Incoming | Outgoing
 datatype act = Clock | Peek
 
-record bufferAction =
-  party :: partyID
-  functionality :: functionalityID
+record buffer_action =
+  party :: party_id
+  functionality :: functionality_id
   direction :: dir
   action :: act
-  msgIndex :: messageIndex
+  msgIndex :: msg_index
 
 
-record queryFunctionality = 
-  queryTarget :: functionalityID
-  queryModule :: moduleType
-  queryInstance :: instanceLabel
-  queryMessage :: message
+record query_functionality = 
+  queryTarget :: functionality_id
+  queryModule :: module_type
+  queryInstance :: instance_label
+  queryMessage :: msg
 
 
-datatype adversarialAction =
-  BufferAction bufferAction |
-  CorruptParty partyID |
-  InvokeEnvironment message |
-  QueryFunctionality queryFunctionality
+datatype adv_action =
+  BufferAction buffer_action |
+  CorruptParty party_id |
+  InvokeEnvironment msg |
+  QueryFunctionality query_functionality
 
 end
