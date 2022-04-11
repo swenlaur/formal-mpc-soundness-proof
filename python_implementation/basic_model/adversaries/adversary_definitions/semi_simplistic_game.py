@@ -1,5 +1,5 @@
 from data_types import PartyId
-from data_types import protocol_description
+from data_types import get_protocol_description
 
 from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
@@ -28,7 +28,7 @@ k: int = 2
 
 # Generate protocol parameters
 parameter_set = trusted_setup()
-protocol_description = protocol_description()
+protocol_description = get_protocol_description()
 
 parent_parties: Dict[int, ParentParty] = {}  # We do not need them in this model
 protocol_parties: Dict[int, ProtocolParty] = {}

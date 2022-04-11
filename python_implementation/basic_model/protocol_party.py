@@ -25,7 +25,7 @@ class ProtocolParty(Machine):
     This makes it easier to formalise the behavior in terms pure functions.
     """
 
-    def __init__(self,  public_param: Any, private_param: Any, code: Any, port_count: int):
+    def __init__(self,  public_param: Any, private_param: Any, code: Any):
         self.corrupted = False
         self.interpreter: StatefulInterpreter = StatefulInterpreter(public_param, private_param, code, port_count)
 

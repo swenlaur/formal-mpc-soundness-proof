@@ -1,7 +1,9 @@
+
+from data_types import Code
 from data_types import PartyId
 from data_types import FunctId
 from data_types import InstanceLabel
-from data_types import protocol_description
+from data_types import get_protocol_description
 
 from data_types import CorruptParty
 from data_types import PeekIncomingBuffer
@@ -40,26 +42,31 @@ n: int = 2
 k: int = 2
 
 # Generate protocol parameters
-parameter_set = trusted_setup()
-protocol_description = protocol_description()
-
-parent_parties: Dict[int, ParentParty] = {}  # We do not need them in this model
-protocol_parties: Dict[int, ProtocolParty] = {}
+parameters_parties: Dict[PartyId, Tuple[Any, Any]]
+parameters_functionalities: Dict[PartyId, Tuple[Any, Any]]
+parameters_adversary: Tuple[Any, Any]
+parameters_parties, parameters_functionalities, parameters_adversary = trusted_setup()
+protocol_description: Dict[PartyId, Code]
+protocol_description = get_protocol_description()
 
 # Set up environment and protocol parties
-for i, pk, sk in enumerate(parameter_set[:n]):
-    parent_parties[i] = ParentParty(pk, sk)
-    protocol_parties[i] = ProtocolParty(pk, sk, protocol_description[i], k + 1)
-environment = Environment([parent_parties[i] for i in range(n)])
+parent_parties: Dict[PartyId, ParentParty] = {}  # We do not need them in this model
+protocol_parties: Dict[PartyId, ProtocolParty] = {}
+
+for party, (pk, sk) in parameters_parties.items():
+    parent_parties[party] = ParentParty(pk, sk)
+    protocol_parties[party] = ProtocolParty(pk, sk, protocol_description[party])
+environment = Environment(parent_parties)
 
 # Set up ideal functionalities
-ideal_functionalities: Dict[int, StandardFunctionality] = {}
-for i, pk, sk in enumerate(parameter_set[n:n+k]):
-    ideal_functionalities[i] = StandardFunctionality(pk, sk)
+ideal_functionalities: Dict[FunctId, StandardFunctionality] = {}
+for functionality, (pk, sk) in parameters_functionalities.items():
+    ideal_functionalities[functionality] = StandardFunctionality(pk, sk)
+ideal_functionalities[k + 1] = environment
 
 # Set up the adversary
-public_param, private_param = parameter_set[n + k]
-adversary = LazyAdversary(public_param, private_param)
+pk, sk = parameters_adversary
+adversary = LazyAdversary(pk, sk)
 
 # Initialise protocol wiring. The first index marks protocol party. The second index marks ideal functionality.
 incoming_buffers: Dict[PartyId, Dict[FunctId, LeakyBuffer]] = {i: {j: LeakyBuffer() for j in range(k + 1)} for i in range(n)}
@@ -135,11 +142,7 @@ while next_action is not None:
             is_lazy = False
         outgoing_signals[next_action.party, next_action.functionality, t1, t2] = False
         # --------------------------------------------------------------------------------------------------------------
-        # For technical reasons it makes sense to include environment into the set of functionalities
-        if next_action.functionality in range(k):
-            ideal_functionalities[next_action.functionality](next_action.party, msg)
-        else:
-            environment(next_action.party, msg)
+        ideal_functionalities[next_action.functionality](next_action.party, msg)
         prev_action = next_action
         next_action = adversary.next_action(None)
     elif isinstance(next_action, SendIncomingMessage):

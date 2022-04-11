@@ -22,4 +22,4 @@ from labels import PartyId
 from labels import FunctId
 
 from .code import Code
-from .protocol_description import protocol_description
+from .protocol_description import get_protocol_description

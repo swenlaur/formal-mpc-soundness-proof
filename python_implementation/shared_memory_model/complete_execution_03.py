@@ -1,4 +1,4 @@
-from data_types import protocol_description
+from data_types import get_protocol_description
 from network_components import Environment
 from network_components import trusted_setup
 from network_components import ParentParty
@@ -29,7 +29,7 @@ k = 2
 
 # Generate protocol parameters
 parameter_set = trusted_setup()
-protocol_description = protocol_description()
+protocol_description = get_protocol_description()
 
 # Set up environment
 # noinspection PyTypeChecker

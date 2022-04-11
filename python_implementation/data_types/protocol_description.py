@@ -1,9 +1,10 @@
 from .code import Code
+from .labels import PartyId
 
-from typing import List
+from typing import Dict
 
 
-def protocol_description() -> List[Code]:
+def get_protocol_description() -> Dict[PartyId, Code]:
     """
     Protocol description is a tuple of individual instructions to each protocol party.
     """
