@@ -44,6 +44,8 @@ class StatefulInterpreter(Machine):
         writing_instructions: WriteInstructions = []
 
         # TODO: add interpreter code here!
+        # Explicit assumptions about the interpreter
+        # 1) Interpreter never writes to invalid port!
         _ = protocol_instance
 
         return writing_instructions

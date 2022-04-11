@@ -13,12 +13,13 @@ record buffer_action =
   msgIndex :: msg_index
 
 
-record query_functionality = 
+record query_functionality =
   queryTarget :: functionality_id
   queryModule :: module_type
   queryInstance :: instance_label
   queryMessage :: msg
 
+(* TODO: Send message actions are missing! *)
 
 datatype adv_action =
   BufferAction buffer_action |

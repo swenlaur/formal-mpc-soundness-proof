@@ -1,6 +1,7 @@
 from data_types import InstanceLabel
 from data_types import InstanceState
 from data_types import WriteInstructions
+from data_types import FunctId
 
 from network_components import Machine
 from basic_model import StatefulInterpreter
@@ -46,25 +47,22 @@ class ProtocolParty(Machine):
     def corrupt_party(self) -> Tuple[Dict[InstanceLabel, Tuple[InstanceState, int]], Any, Any]:
         """
         Corrupts the party and forces the interpreter to dump their internal state and public and private parameters.
+        We formally allow double corruption although this deserves special attention during a simulation.
         """
-        if self.corrupted:
-            raise InvalidAdversarialAction('Double corruption is not allowed')
-
         self.corrupted = True
         return self.interpreter.reveal_state()
 
-    def write_to_outgoing_buffer(self, input_port: int, msg: Any) -> WriteInstructions:
+    def write_to_outgoing_buffer(self, output_port: FunctId, msg: Any) -> WriteInstructions:
         """
         Adversary can write a message to the outgoing buffers when the party is corrupted.
         As a result corresponding write-instructions for outgoing buffers are returned.
         After that the message is written to the desired buffer and the control is given back to the adversary.
+        Note that the typing guarantees that the adversary cannot write to invalid port.
         """
         if not self.corrupted:
             raise InvalidAdversarialAction('Party must be corrupted before sending writing instructions')
-        if input_port < 0 or self.interpreter.port_count <= input_port:
-            raise InvalidAdversarialAction('Invalid port number in writing instructions')
 
-        return [(input_port, msg)]
+        return [(output_port, msg)]
 
     def write_to_interpreter(self, input_port: int, msg: Any) -> WriteInstructions:
         """
@@ -79,7 +77,5 @@ class ProtocolParty(Machine):
         """
         if not self.corrupted:
             raise InvalidAdversarialAction('Party must be corrupted before sending writing instructions')
-        if input_port < 0 or self.interpreter.port_count <= input_port:
-            raise InvalidAdversarialAction('Invalid port number in writing instructions')
 
         return self.interpreter(input_port, msg)
