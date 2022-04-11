@@ -3,7 +3,15 @@ from data_types import FunctId
 from data_types import InstanceLabel
 from data_types import protocol_description
 
-from adversarial_failures import InvalidAdversarialAction
+from data_types import CorruptParty
+from data_types import PeekIncomingBuffer
+from data_types import PeekOutgoingBuffer
+from data_types import ClockIncomingBuffer
+from data_types import ClockOutgoingBuffer
+from data_types import SendIncomingMessage
+from data_types import SendOutgoingMessage
+from data_types import QueryFunctionality
+from data_types import InvokeEnvironment
 
 from basic_model import StandardFunctionality
 from basic_model import LazyAdversary
@@ -14,15 +22,6 @@ from network_components import ParentParty
 from network_components import Environment
 from network_components import trusted_setup
 
-from adversarial_actions import CorruptParty
-from adversarial_actions import PeekIncomingBuffer
-from adversarial_actions import PeekOutgoingBuffer
-from adversarial_actions import ClockIncomingBuffer
-from adversarial_actions import ClockOutgoingBuffer
-from adversarial_actions import SendIncomingMessage
-from adversarial_actions import SendOutgoingMessage
-from adversarial_actions import QueryFunctionality
-from adversarial_actions import InvokeEnvironment
 
 from typing import Any
 from typing import Set
@@ -34,6 +33,8 @@ def get_protocol_instances(msg: Any) -> Tuple[InstanceLabel, InstanceLabel]:
     """
     Extracts protocol instances from outgoing message.
     """
+    pass
+
 
 n: int = 2
 k: int = 2
