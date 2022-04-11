@@ -1,8 +1,6 @@
 theory CompleteExecution00
-  imports Main 
-    "$ISABELLEWORK/data_types/DataTypes"
-    "$ISABELLEWORK/adversarial_actions/AdversarialAction"
-ProtocolParty ParentParty StandardFunctionality LazyAdversary Environment
+  imports Main DataTypes
+    AdversarialAction ProtocolParty ParentParty StandardFunctionality LazyAdversary Environment
 begin
 
 definition n :: nat where "n = 2"
