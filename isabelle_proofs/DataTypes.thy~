@@ -51,12 +51,5 @@ trusted_setup (does something with the random values) *)
 datatype protocol_description = ProtocolDescription "code list"
 (* similarly here? *)
 
-datatype adv_input =  
-  AdvNone |
-  CorruptionReply "state \<times> public_param \<times> private_param" |
-  ClockIncomingReply "(port_no, msg) map" |
-  SendIncomingReply write_instructions | (* Oh no *)
-  InvokeEnvironmentReply msg | (* Any type in Python *)
-  QueryFunctionalityReply msg
 
 end

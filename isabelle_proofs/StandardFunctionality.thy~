@@ -1,0 +1,5 @@
+theory StandardFunctionality
+  imports Main DataTypes Buffers 
+begin
+typedecl standard_functionality
+end
