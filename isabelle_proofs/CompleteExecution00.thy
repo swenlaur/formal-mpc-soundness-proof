@@ -65,6 +65,7 @@ definition adversary :: lazy_adversary where
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg*) (* Any type in Python, most likely actually Any type (data of modules) *)
 
+(* It currently gives an error, but I have to leave *)
 definition small_step :: "system_state \<times> flags \<times> adv_action \<Rightarrow> system_state \<times> flags \<times> adv_input" where
  "small_step (s, f, a) = (case a of
  CorruptParty p \<Rightarrow>
