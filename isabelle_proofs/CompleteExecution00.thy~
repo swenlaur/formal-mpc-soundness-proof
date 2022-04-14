@@ -15,14 +15,45 @@ consts protocol_description :: "(party_id, code) map"
 
 consts parent_parties :: "(party_id, parent_party) map"
 consts protocol_parties :: "(party_id, protocol_party) map"
-(* A whole passage building up the parent_parties, the protocol_parties maps, *)
-(* the environment, and the ideal functionalities. *)
-(* Should I actually initialize these? *)
-
 definition env :: environment where
 "env =  \<lparr>env_parent_parties = parent_parties, env_outgoing_buffers = [] \<rparr>"
-
 consts ideal_functionalities :: "(functionality_id, standard_functionality) map"
+(* Issue w/ modelling env as func: can't distinguish it when inside  a map *)
+consts incoming_buffers :: "(party_id * functionality_id, 
+consts outgoing_signals :: "(party_id * functionality_id * instance_label * instance_label, bool) map"
+
+record  system_state =
+  state_protocol_parties ::  "(party_id, protocol_party) map"
+  state_env :: environment
+  state_ideal_functionalities :: "(functionality_id, standard_functionality) map"
+  state_corrupted_parties :: "party_id list"
+  state_outgoing_signals :: "(party_id * functionality_id * instance_label * instance_label, bool) map"
+
+
+record flags =
+  is_lazy :: bool
+  is_generic :: bool
+  is_coherent :: bool
+  is_semi_simplistic :: bool
+
+
+
+definition system_state_00 where
+"system_state_00 = \<lparr>
+ state_protocol_parties = protocol_parties,
+ state_env = env,
+ state_ideal_functionalities = ideal_functionalities,
+ state_corrupted_parties = [],
+ state_outgoing_signals = outgoing_signals
+ \<rparr>"
+
+definition flags_00 where
+"flags_00 = \<lparr>
+ is_lazy = True,
+ is_generic = True,
+ is_coherent = True, 
+ is_semi_simplistic = True 
+\<rparr>"
 
 definition adversary :: lazy_adversary where 
 "adversary = \<lparr> public_params = fst parameters_adversary, private_params = snd parameters_adversary\<rparr>"
@@ -35,36 +66,53 @@ definition adversary :: lazy_adversary where
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg*) (* Any type in Python, most likely actually Any type (data of modules) *)
 
-definition action_to_input :: "adv_action \<Rightarrow> adv_input" where
- 
- "action_to_input a = (case a of
+(* It currently gives an error, but I have to leave *)
 
-    CorruptParty p \<Rightarrow> (case protocol_parties p of
-      None \<Rightarrow> AdvNone | 
-      Some party \<Rightarrow> (case corruption_reply party of 
-        None \<Rightarrow> AdvNone|
-        Some r \<Rightarrow> CorruptionReply r)) |
+(* CorruptParty:
+1st checks if the party_id is valid (if not, returns nothing),
+2nd checks what the corruptionreply of the party is *)
+fun small_step ::
+"system_state \<times> flags \<times>  adv_action \<Rightarrow> system_state\<times> flags\<times> adv_input" where
+"small_step (s, f, a)  = 
+(case a of
 
-    BufferAction b \<Rightarrow> (case bufferAction b of 
+  CorruptParty p \<Rightarrow>
+  (case protocol_parties p of
+     None \<Rightarrow>
+        (s, f, AdvNone) |
+     Some party \<Rightarrow>
+        (case corruption_reply party of 
+            None \<Rightarrow> 
+                (s, f, AdvNone)|
+            Some r \<Rightarrow> 
+                (s\<lparr>state_corrupted_parties := p # (state_corrupted_parties s),
+                   state_protocol_parties := map_upds (state_protocol_parties s) [] []\<rparr>,
+                 f, CorruptionReply r))) |
+  
+  BufferAction b \<Rightarrow> 
+  (case bufferAction b of 
+      Peek \<Rightarrow> (case bufferDirection b of
+        Incoming \<Rightarrow> (s, f, AdvNone)|
+        Outgoing \<Rightarrow> (s, f, AdvNone)) |
       Clock \<Rightarrow> (case bufferDirection b of
-        Incoming \<Rightarrow> AdvNone|
-        Outgoing \<Rightarrow> AdvNone ) |
-      Send \<Rightarrow> (case bufferDirection b of
-        Incoming \<Rightarrow> AdvNone|
-        Outgoing \<Rightarrow> AdvNone )) |
-
-    InvokeEnvironment m \<Rightarrow> InvokeEnvironmentReply (env_adv_probe env m) |
-
-    QueryFunctionality q \<Rightarrow> (case ideal_functionalities (queryTarget q) of
-      None \<Rightarrow> AdvNone |
-      Some fnl \<Rightarrow> QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q))))"
+        Incoming \<Rightarrow> (s, f, AdvNone)|
+        Outgoing \<Rightarrow> (s, f, AdvNone))) |
 
 
+  InvokeEnvironment m \<Rightarrow> (s, f, InvokeEnvironmentReply (env_adv_probe env m)) |
+
+  QueryFunctionality q \<Rightarrow> (case ideal_functionalities (queryTarget q) of
+      None \<Rightarrow>  (s, f, AdvNone) |
+      Some fnl \<Rightarrow> (s, f, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))))"
+
+
+(* Declares the other half of the execution loop *)
 consts input_to_action ::  "adv_input \<Rightarrow> adv_action"
-definition next_action :: "adv_action \<Rightarrow> adv_action"  where
-"next_action action = input_to_action (action_to_input action)"
+fun small_step_2 :: 
+"system_state \<times>  flags \<times> adv_input \<Rightarrow> system_state \<times> flags \<times> adv_action" where
+"small_step_2 (s, f, i) = (s, f, (input_to_action i))"
 
 
-
+(* system_state contains protocol parties and ... *)
 
 end

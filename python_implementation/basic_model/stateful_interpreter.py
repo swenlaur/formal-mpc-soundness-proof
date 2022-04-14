@@ -32,7 +32,7 @@ class StatefulInterpreter(Machine):
         """
         Processes messages coming form ideal functionalities or the environment.
         Returns a list of port labels and corresponding messages the interpreter wants to write into buffers.
-        The port numbering matches the numbering of out going buffers:
+        The port numbering matches the numbering of outgoing buffers:
         * The first k ports correspond to ideal functionalities.
         * The k-th port corresponds to the environment.
         """

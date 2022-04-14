@@ -14,6 +14,9 @@ record protocol_party =
 definition set_corrupted :: "'a protocol_party_scheme \<Rightarrow> 'a protocol_party_scheme" where
 "set_corrupted p = p\<lparr>corrupted :=  True\<rparr>"
 
+definition modify_parties_map :: "('a, 'b) map \<Rightarrow> ('a, 'b) map" where
+"modify_parties_map m = m"
+
 
 (* an undefined function that takes a party and gives its internals *)
 consts dump_internals :: 
@@ -30,12 +33,10 @@ Replies with None if party is not corrupted
 *)
 definition corruption_reply :: 
 "'a protocol_party_scheme \<Rightarrow> (state \<times> public_param \<times> private_param) option" where
-"corruption_reply p = (if corrupted p then dump_internals p else None)"
+"corruption_reply p = (if corrupted p then Some (dump_internals p) else None)"
 
 (* ==== HELPERS END HERE ===== *)
 
-(* takes a party, corrupts it, updates the map,  *)
-definition corrupt_party :: "'a protocol_party_scheme \<Rightarrow> adv_input" where
 
 
 
