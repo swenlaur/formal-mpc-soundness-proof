@@ -20,7 +20,6 @@ record query_functionality =
   queryMessage :: msg
 
 (* TODO: Send message actions are missing! *)
-
 record send_message =
   sendParty :: party_id
   sendFunctionality :: functionality_id
@@ -28,6 +27,7 @@ record send_message =
   sendMessage :: msg
 
 datatype adv_action =
+  Empty |
   CorruptParty party_id |
   BufferAction buffer_action |
   SendMessage send_message |

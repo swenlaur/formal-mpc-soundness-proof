@@ -17,16 +17,18 @@ definition write_message :: "'a leaky_buffer_scheme \<Rightarrow> msg \<Rightarr
 
 definition clock_message :: "'a leaky_buffer_scheme \<Rightarrow> nat \<Rightarrow> (msg \<times>'a leaky_buffer_scheme) option" where
 "clock_message b n = (if n \<ge> length (messages b) then None 
-else messages b ! n, b\<lparr>messages := remove_nth n (messages b)\<rparr>)"
+else Some (messages b ! n, b\<lparr>messages := remove_nth n (messages b)\<rparr>))"
 
-definition empty :: "'a leaky_buffer_scheme \<Rightarrow> bool" where
-"empty b = (case (messages b) of [] \<Rightarrow> True | xs \<Rightarrow> False)"
+definition empty :: "'a leaky_buffer_scheme option  \<Rightarrow> bool" where
+"empty b = (case b of None \<Rightarrow> False |
+ Some lb \<Rightarrow> (case (messages lb) of [] \<Rightarrow> True | xs \<Rightarrow> False))"
 
 (*What's up with the structure of peek_message? *)
- definition peek_message :: "'a leaky_buffer_scheme \<Rightarrow> nat \<Rightarrow> msg" where
-"peek_message b n = leak_function messages b ! n"
+consts peek_message :: "'a leaky_buffer_scheme \<Rightarrow> msg_index \<Rightarrow> msg" 
+  (*where
+"peek_message b n = leak_function messages b ! n"*)
 (* I don't get what the asserts are*)
 
-definition leak_function :: "msg \<Rightarrow> msg"
+consts leak_function :: "msg \<Rightarrow> msg"
 
 end

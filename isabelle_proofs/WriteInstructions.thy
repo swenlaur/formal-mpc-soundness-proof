@@ -1,5 +1,5 @@
 theory WriteInstructions
-  imports Main Message
+  imports Main DataTypes
 begin
-type_synonym  writeInstructions = "(nat \<times> message) list"
+type_synonym  write_instructions = "(functionality_id \<times> msg) list"
 end

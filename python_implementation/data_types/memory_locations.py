@@ -7,7 +7,7 @@ class MemoryLocation:
     pass
 
 
-class PinnedLocation(MemoryLocation):
+class PinnedLocation(MemoryLocation): # Võib olla see, kuhu panna DMACalli ja Sendi staatused jooksvalt (?)
     """
     Default address for memory segment with single entry.
     """

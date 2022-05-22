@@ -7,7 +7,7 @@ typedecl msg
 typedecl party_id 
 typedecl functionality_id
 typedecl port_no 
-typedecl msg_index
+type_synonym msg_index = nat
 typedecl module_type 
 typedecl state 
 (* Obviously state can't remain like this. *)
@@ -54,6 +54,7 @@ datatype protocol_description = ProtocolDescription "code list"
 datatype adv_input =  
   AdvNone |
   CorruptionReply "state \<times> public_param \<times> private_param" |
+  PeekReply msg |
   ClockIncomingReply "(port_no, msg) map" |
   SendIncomingReply write_instructions | (* Oh no *)
   InvokeEnvironmentReply msg | (* Any type in Python *)

@@ -34,6 +34,7 @@ class StatefulInterpreter(Machine):
         Returns a list of port labels and corresponding messages the interpreter wants to write into buffers.
 
         The port numbering matches the numbering of outgoing buffers:
+        * The 0-th port is adv
         * The first k ports correspond to ideal functionalities.
         * The k-th port corresponds to the environment.
 
@@ -51,7 +52,7 @@ class StatefulInterpreter(Machine):
         # 1) Interpreter never writes to invalid port!
         _ = protocol_instance
 
-        if input_port == self.port_count and msg == INIT: #Is there a better way than if-then to write up semantics?
+        if input_port == 0 and msg == INIT: #Is there a better way than if-then to write up semantics?
             self.input_queues[input_port].add(msg)
             self.state[_] = ({}, 0) # This is supposed to be the empty initialized state, but I don't think the 0 should be there.
             #Which variable is the program counter n?
