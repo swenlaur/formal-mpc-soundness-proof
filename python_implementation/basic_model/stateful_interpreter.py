@@ -23,10 +23,11 @@ class StatefulInterpreter(Machine):
         self.public_param: Any = public_param
         self.private_param: Any = private_param
 
-        self.code = code #Semantics: program code p
-        self.state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {} #"Two-dimensional array capturing the internal state of the interpreter"
+        self.code = code  # Semantics: program code p
+        self.state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {}  # "Two-dimensional array capturing the
+        # internal state of the interpreter"
         self.port_count = port_count
-        self.input_queues: List[Queue] = [Queue()] * port_count #Input ports i
+        self.input_queues: List[Queue] = [Queue()] * port_count  # Input ports i
 
     def __call__(self, input_port: int, msg: Any) -> WriteInstructions:
         """

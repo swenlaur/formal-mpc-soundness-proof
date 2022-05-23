@@ -58,16 +58,18 @@ consts repack_write_instr ::
 
 (* YIKES! *)
 
-(*Adversarial Input Cheat Sheet:
+(*
+Adversarial Input Cheat Sheet:
 
- datatype adv_input =
+datatype adv_input =  
   AdvNone |
   CorruptionReply "state \<times> public_param \<times> private_param" |
   PeekReply msg |
-  ClockIncomingReply "(port_no, msg) map" |
-  SendIncomingReply write_instructions | (* Oh no *)
+  ClockIncomingReply "(functionality_id \<times> msg) option" |
+  SendIncomingReply "(functionality_id \<times> msg) list" | (* Oh no *)
   InvokeEnvironmentReply msg | (* Any type in Python *)
-  QueryFunctionalityReply msg (* Any type in Python, most likely actually Any type (data of modules) *)
+  QueryFunctionalityReply msg
+
 *) 
 
 
@@ -82,54 +84,66 @@ Refactored the function to be f : S x A \<rightarrow> S x I.
 
  *)
 
+(* Breaks bc thinks party is party_id, not 'a protocol_party_scheme.    
+
+ Some party \<Rightarrow>
+     (case party \<in> state_corrupted_parties s of
+        True \<Rightarrow> (s, AdvNone) |
+        False \<Rightarrow> (s\<lparr>state_corrupted_parties := insert party (state_corrupted_parties s),
+           state_previous_action := CorruptParty p\<rparr>,
+         CorruptionReply (internal_state party)
+)))
+
+*)
+
 fun adv_step ::
- "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
+"system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
 "adv_step (s, action)  = 
 (case action of
   Empty \<Rightarrow> (s, AdvNone) |
- 
   CorruptParty p \<Rightarrow>
   (case protocol_parties p of
-     None \<Rightarrow>
-        (s, AdvNone) |
-     Some party \<Rightarrow>
-        if party \<in> state_corrupted_parties s then (s, AdvNone) else 
-        (s\<lparr>state_corrupted_parties := insert party (state_corrupted_parties s),
-           state_previous_action := CorruptParty p\<rparr>,
-         CorruptionReply (internal_state party))) |
-  
-  BufferAction b \<Rightarrow>
-  (case bufferAction b of
+     None \<Rightarrow> (s, AdvNone) |
+     Some party \<Rightarrow> (s, AdvNone)) |
  
+  BufferAction b \<Rightarrow>
+  (case bufferAction b of 
       Peek \<Rightarrow>
       (case bufferDirection b of
         Incoming \<Rightarrow>
         (case incoming_buffers (bufferParty b, bufferFunc b) of
             None \<Rightarrow> (s, AdvNone) |
             Some lb \<Rightarrow>
-                (s, PeekReply (peek_message lb (bufferInd b))))|
+                (s, PeekReply (peek_message lb (bufferFunc b) (bufferInd b))))|
 
         Outgoing \<Rightarrow> 
         (case outgoing_buffers (bufferParty b, bufferFunc b) of
             None \<Rightarrow> (s, AdvNone) |
             Some lb \<Rightarrow>
-                (s, PeekReply (peek_message lb (bufferInd b)))))|
+                (s, PeekReply (peek_message lb (bufferFunc b) (bufferInd b)))))|
 
       Clock \<Rightarrow>
       (case bufferDirection b of
 
         Incoming \<Rightarrow> 
-        (let s = (if (\<exists>p.\<exists>func. p \<in>(state_corrupted_parties s)
-                        \<and> func \<in> (dom (state_ideal_functionalities s))
-                        \<and> empty (state_incoming_buffers s (p, func))) 
+        (let s = (if (\<exists>p.\<exists>func. 
+                          state_protocol_parties s p = Some party
+                        \<and> is_corrupted party
+                        \<and> \<not>(empty_incoming_buffer party f)) 
           then s\<lparr>state_flag := False\<rparr> else s) in
-        (case incoming_buffers (bufferParty b, bufferFunc b) of
+          (case protocol_parties (bufferParty b) of
             None \<Rightarrow> (s, AdvNone) |
-            Some lb \<Rightarrow>
-                (let m = clock_message lb (bufferInd b) in
-                (case protocol_parties (bufferParty b) of
-                  None \<Rightarrow> (s, AdvNone) |
-                  Some party \<Rightarrow> (s, AdvNone)))))|
+            Some party \<Rightarrow> 
+            (let m = clock_message party f (bufferInd b) in
+            (let (write_instructions, reply) = party_call party f m in
+            (case reply of
+              None \<Rightarrow> (s\<lparr>state_protocol_parties := 
+                          map_upds (state_protocol_parties s) 
+                                   [bufferParty b] 
+                                   [do_write_instructions party write_instructions]\<rparr>,
+                       ClockIncomingReply reply) |
+              Some r \<Rightarrow> (s, ClockIncomingReply reply)))
+)))|
 
         Outgoing \<Rightarrow> (s, AdvNone))) |
 
