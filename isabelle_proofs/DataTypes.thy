@@ -50,7 +50,7 @@ datatype adv_input =
   AdvNone |
   CorruptionReply "state \<times> public_param \<times> private_param" |
   PeekReply msg |
-  ClockIncomingReply "(functionality_id, msg) map" |
+  ClockIncomingReply "(functionality_id \<times> msg) option" |
   SendIncomingReply "(functionality_id \<times> msg) list" | (* Oh no *)
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg

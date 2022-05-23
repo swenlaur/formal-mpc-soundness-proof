@@ -6,7 +6,6 @@ begin
 typedecl msg
 typedecl party_id 
 typedecl functionality_id
-typedecl port_no 
 type_synonym msg_index = nat
 typedecl module_type 
 typedecl state 
@@ -35,10 +34,6 @@ typedecl pinned_memory_location (* Constant - option type? *)
 (* instance_state.py *)
 datatype instance_state = InstanceState "(value_type_label \<Rightarrow> memory_location \<Rightarrow> value_type) option"
 
-
-(* write_instructions.py *)
-datatype write_instructions = WriteInstructions "(port_no \<times> msg) list"
-
 (* trusted_setup.py *)
 datatype trusted_setup = TrustedSetup "(public_param \<times> private_param) list"
 (* This is supposed to actually be a randomized function. *)
@@ -55,8 +50,8 @@ datatype adv_input =
   AdvNone |
   CorruptionReply "state \<times> public_param \<times> private_param" |
   PeekReply msg |
-  ClockIncomingReply "(port_no, msg) map" |
-  SendIncomingReply write_instructions | (* Oh no *)
+  ClockIncomingReply "(functionality_id, msg) map" |
+  SendIncomingReply "(functionality_id \<times> msg) list" | (* Oh no *)
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg
 

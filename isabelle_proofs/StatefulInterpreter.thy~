@@ -1,23 +1,20 @@
 theory StatefulInterpreter
-  imports Main DataTypes
+  imports Main DataTypes 
 begin
 
-record stateful_interpreter =
+typedecl stateful_interpreter
+
+(*record stateful_interpreter =
   public_params :: public_param
   private_params :: private_param
   code :: code
-  state ::" (instance_label \<times> (instance_state \<times> nat)) map"
+  state :: "(instance_label \<times> (instance_state \<times> nat)) map" (* Is this right? *)
   port_count :: nat
-  input_queues ::  ? ? ? 
-(* list of queues. 
-a queue is a class that has no attributes 
-but can take a message (add), 
-and return a message (fetch) *)
-(* ? ? ? *)
+ (* input_queues ::  ? *)
 
 definition process_inputs ::"'a stateful_interpreter_scheme  \<Rightarrow> nat \<Rightarrow> msg \<Rightarrow> write_instructions"  where
-  "processInputs i input_port msg = 
+  "process_inputs i input_port msg = 
     if k < 0 or port_count i \<le> input_port
        then ?
-     else    "
+     else    "*)
 end

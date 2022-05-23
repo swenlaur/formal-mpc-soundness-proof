@@ -4,12 +4,19 @@ begin
 
 record protocol_party =
   party_interpreter :: stateful_interpreter
+  party_corrupted :: bool
   party_incoming_buffers :: "(functionality_id, msg list) map"
   party_outgoing_buffers :: "(functionality_id, msg list) map"
 
-(* an undefined function that takes a party and gives its internals *)
-consts internal_state :: 
-"'a protocol_party_scheme \<Rightarrow> state \<times> public_param \<times> private_param"
+definition is_corrupted :: 
+"'a protocol_party_scheme \<Rightarrow> bool" where
+"is_corrupted p = party_corrupted p"
+
+(* (instance_label, instance_state \<times> nat) map \<Rightarrow> interpreter_state *)
+definition internal_state :: 
+"'a protocol_party_scheme 
+\<Rightarrow> (instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" where
+"internal_state p = reveal_state (party_interpreter p)"
 
 
 (* Helper list methods *)
@@ -36,12 +43,13 @@ definition buffer_with_msg ::
     None \<Rightarrow> [] |
     Some b \<Rightarrow>  [m # b])))" 
 
-definition update_outgoing_buffers :: (* [] should be a msg list list... *)
+definition update_outgoing_buffers :: (* [] \<Rightarrow>  msg list list *)
 "(functionality_id, msg list) map \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> (functionality_id, msg list) map" where
 "update_outgoing_buffers bs ws = (map_upds bs (fst_unzip ws) [])"
 
 definition clock_message ::
-"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> nat \<Rightarrow> msg option \<times> 'a protocol_party_scheme" where
+"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> nat 
+\<Rightarrow> msg option \<times> 'a protocol_party_scheme" where
 "clock_message p f n = 
   (case party_incoming_buffers p f of
     None \<Rightarrow> (None, p) |
@@ -63,13 +71,10 @@ definition do_write_instructions ::
 "'a protocol_party_scheme \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> 'a protocol_party_scheme" where
 "do_write_instructions p w = p\<lparr>party_outgoing_buffers := (update_outgoing_buffers (party_outgoing_buffers p) w)\<rparr>"
 
-
-(* Okay, so my overall point is to refactor the code, and I'm working on that.
-The other thing is working on the interpreter semantics. *)
-
-
-
-
-
+definition party_call ::
+"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg
+ \<Rightarrow> ((functionality_id \<times> msg) list) \<times> ((functionality_id \<times> msg) option)" where
+"party_call p f m = (if party_corrupted p = True then ([], Some (f, m)) 
+               else (interpreter_call (party_interpreter p) f m, None))"
 
 end
