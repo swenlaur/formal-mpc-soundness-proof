@@ -2,15 +2,21 @@ theory StatefulInterpreter
   imports Main DataTypes 
 begin
 
-typedecl stateful_interpreter
-
-(*record stateful_interpreter =
+record stateful_interpreter =
   public_params :: public_param
   private_params :: private_param
   code :: code
-  state :: "(instance_label \<times> (instance_state \<times> nat)) map" (* Is this right? *)
+  state :: "(instance_label, instance_state \<times> nat) map" 
   port_count :: nat
- (* input_queues ::  ? *)
+
+definition interpreter_call ::
+"'a stateful_interpreter_scheme  \<Rightarrow> functionality_id \<Rightarrow> msg 
+\<Rightarrow> (functionality_id \<times> msg) list"  where
+"interpreter_call i f m = [(f,m)]"
+
+definition reveal_state ::
+"'a stateful_interpreter_scheme \<Rightarrow>(instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" where
+"reveal_state i = (state i, public_params i, private_params i)"
 
 definition process_inputs ::"'a stateful_interpreter_scheme  \<Rightarrow> nat \<Rightarrow> msg \<Rightarrow> write_instructions"  where
   "process_inputs i input_port msg = 

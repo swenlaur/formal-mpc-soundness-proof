@@ -1,5 +1,5 @@
 theory ProtocolParty
-imports Main DataTypes StatefulInterpreter Buffers
+  imports Main DataTypes StatefulInterpreter
 begin
 
 record protocol_party =
@@ -47,6 +47,7 @@ definition update_outgoing_buffers :: (* [] \<Rightarrow>  msg list list *)
 "(functionality_id, msg list) map \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> (functionality_id, msg list) map" where
 "update_outgoing_buffers bs ws = (map_upds bs (fst_unzip ws) [])"
 
+
 definition clock_message ::
 "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> nat 
 \<Rightarrow> msg option \<times> 'a protocol_party_scheme" where
@@ -63,8 +64,19 @@ definition empty_incoming_buffer ::
     None => True |
     Some b => if b=[] then True else False)"
 
-consts peek_message ::
-"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg_index \<Rightarrow> msg"
+definition peek_incoming_buffer ::
+"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg_index \<Rightarrow> msg option" where
+"peek_incoming_buffer p f n = 
+(case (party_incoming_buffers p f) of 
+None \<Rightarrow> None |
+Some msglist \<Rightarrow> Some (nth msglist n))"
+
+definition peek_outgoing_buffer ::
+"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg_index \<Rightarrow> msg option" where
+"peek_outgoing_buffer p f n = 
+(case (party_outgoing_buffers p f) of 
+None \<Rightarrow> None |
+Some msglist \<Rightarrow> Some (nth msglist n))"
 
 (* Party methods *)
 definition do_write_instructions ::

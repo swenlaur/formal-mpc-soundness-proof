@@ -22,11 +22,11 @@ class StatefulInterpreter(Machine):
     def __init__(self, public_param: Any, private_param: Any, code: Any, port_count: int):
         self.public_param: Any = public_param
         self.private_param: Any = private_param
+        self.state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {}  # "Two-dimensional array capturing the internal state of the interpreter"
+        self.port_count = port_count
 
         self.code = code  # Semantics: program code p
-        self.state: Dict[InstanceLabel, Tuple[InstanceState, int]] = {}  # "Two-dimensional array capturing the
-        # internal state of the interpreter"
-        self.port_count = port_count
+        self.current_instructions: Dict[InstanceLabel, set] = {}  # Semantics: current instructions n
         self.input_queues: List[Queue] = [Queue()] * port_count  # Input ports i
 
     def __call__(self, input_port: int, msg: Any) -> WriteInstructions:
@@ -44,19 +44,19 @@ class StatefulInterpreter(Machine):
         if input_port < 0 or self.port_count <= input_port:
             raise ProtocolFailure('Invalid input port')
 
-        self.input_queues[input_port].add(msg)
         protocol_instance: InstanceLabel = self.get_protocol_instance(msg)
-        writing_instructions: WriteInstructions = [] #Output messages o
+        writing_instructions: WriteInstructions = []  # Semantics: Output messages o
 
         # TODO: add interpreter code here!
         # Explicit assumptions about the interpreter
         # 1) Interpreter never writes to invalid port!
         _ = protocol_instance
 
-        if input_port == 0 and msg == INIT: #Is there a better way than if-then to write up semantics?
-            self.input_queues[input_port].add(msg)
-            self.state[_] = ({}, 0) # This is supposed to be the empty initialized state, but I don't think the 0 should be there.
-            #Which variable is the program counter n?
+        if input_port == 0 and msg == INIT:  # Is there a better way than if-then to write up semantics?
+            self.input_queues[input_port].add(msg)  # Semantics: i[0 -> (t_e, t*, delta, m)]
+            self.state[_] = ({}, 0)  # Semantics: s[t* -> e]
+            self.current_instructions[_] = {(1, 0)}  # Semantics: n[t* -> {(1,0)}]
+
 
 
 

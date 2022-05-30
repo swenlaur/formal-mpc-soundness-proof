@@ -1,5 +1,5 @@
 theory Environment
-  imports Main DataTypes Buffers ParentParty 
+  imports Main DataTypes 
 begin
 record environment =
   env_outgoing_buffers :: "msg list list" 

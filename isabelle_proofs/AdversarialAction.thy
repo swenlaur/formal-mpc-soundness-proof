@@ -20,9 +20,10 @@ record query_functionality =
   queryMessage :: msg
 
 (* TODO: Send message actions are missing! *)
+(* J: I think this is not relevant anymore *)
 record send_message =
   sendParty :: party_id
-  sendFunctionality :: functionality_id
+  sendFunc :: functionality_id
   sendDir :: dir
   sendMessage :: msg
 

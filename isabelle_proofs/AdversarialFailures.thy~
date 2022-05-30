@@ -1,8 +1,0 @@
-theory AdversarialFailures
-  imports Main
-begin
-
-typedecl invalidAdversarialAction
-typedecl protocolFailure
-
-end

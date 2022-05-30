@@ -27,6 +27,7 @@ record send_message =
   sendMessage :: msg
 
 datatype adv_action =
+  Empty |
   CorruptParty party_id |
   BufferAction buffer_action |
   SendMessage send_message |
