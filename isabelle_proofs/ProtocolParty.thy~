@@ -1,5 +1,5 @@
 theory ProtocolParty
-imports Main DataTypes StatefulInterpreter
+  imports Main DataTypes StatefulInterpreter
 begin
 
 record protocol_party =

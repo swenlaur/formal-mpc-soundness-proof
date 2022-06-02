@@ -12,6 +12,10 @@ definition is_corrupted ::
 "'a protocol_party_scheme \<Rightarrow> bool" where
 "is_corrupted p = party_corrupted p"
 
+definition corrupt_party ::
+"'a protocol_party_scheme \<Rightarrow> 'a protocol_party_scheme" where
+"corrupt_party p = p\<lparr>party_corrupted := True\<rparr>"
+
 (* (instance_label, instance_state \<times> nat) map \<Rightarrow> interpreter_state *)
 definition internal_state :: 
 "'a protocol_party_scheme 

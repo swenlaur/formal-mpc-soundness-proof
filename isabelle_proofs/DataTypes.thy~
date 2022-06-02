@@ -46,12 +46,14 @@ trusted_setup (does something with the random values) *)
 datatype protocol_description = ProtocolDescription "code list"
 (* similarly here? *)
 
+type_synonym write_instructions = "(functionality_id \<times> msg) list"
+
 datatype adv_input =  
   AdvNone |
   CorruptionReply "state \<times> public_param \<times> private_param" |
   PeekReply msg |
   ClockIncomingReply "(functionality_id \<times> msg) option" |
-  SendIncomingReply "(functionality_id \<times> msg) list" | (* Oh no *)
+  SendIncomingReply write_instructions |
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg
 

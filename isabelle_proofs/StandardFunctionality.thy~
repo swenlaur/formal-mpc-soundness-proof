@@ -1,5 +1,5 @@
 theory StandardFunctionality
-  imports Main DataTypes Buffers 
+  imports Main DataTypes
 begin
 
 typedecl sharing_module

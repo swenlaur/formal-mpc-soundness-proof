@@ -5,6 +5,7 @@ begin
 typedecl sharing_module
 typedecl computation_module
 typedecl reconstruction_module
+typedecl func_data
 
 record standard_functionality =
   fnl_sharing_module :: sharing_module

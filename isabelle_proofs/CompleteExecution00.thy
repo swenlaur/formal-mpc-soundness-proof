@@ -44,13 +44,6 @@ definition system_state_00 where
  state_flag = True
  \<rparr>"
 
-definition adversary :: lazy_adversary where 
-"adversary = \<lparr>
- public_params = fst parameters_adversary, 
- private_params = snd parameters_adversary
-\<rparr>"
-
-
 
 consts repack_write_instr ::
 "party_id \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> ((party_id \<times> functionality_id) \<times> msg) list"
@@ -73,45 +66,50 @@ datatype adv_input =
 *) 
 
 
-(* WIP:
+(* 
 
-Halfway through ClockIncomingBuffer.
+BUG: loop breaks bc thinks party is party_id, not 'a protocol_party_scheme.
 
-Refactoring the code such that buffers are entirely consumed by protocol parties. That is, 
-there's no separate Buffer datatype.
 
-Refactored the function to be f : S x A \<rightarrow> S x I.
-
- *)
-
-(* Breaks bc thinks party is party_id, not 'a protocol_party_scheme.  
-
-(case protocol_parties p of
-None \<Rightarrow> (s, AdvNone) |
-Some party \<Rightarrow>(case party \<in> state_corrupted_parties s of
-True \<Rightarrow> (s, AdvNone) |
-False \<Rightarrow>(s\<lparr>state_corrupted_parties := insert party (state_corrupted_parties s),
-   state_previous_action := CorruptParty p\<rparr>,
- CorruptionReply (internal_state party))
-))
 
 *)
-(* Would like to assume that if f is an ideal_functionality, 
-then f is always in the domain of other func_id stuffs *)
 
 
-(* WIP: ClockOutgoing Sucks. *)
-(* Okay, so I've done a first pass, but a lot of stuff is still missing! *)
+(*hetkeseis
+
+Empty. töötab, aga ei mäleta, miks vaja oli.
+CorruptParty. töötab
+PeekIncomingBuffer. peek_incoming_buffer?
+PeekOutgoingBuffer. sama küss
+
+
+*)
+(* (case party \<in> state_corrupted_parties s of
+True \<Rightarrow> (s, AdvNone) |
+False \<Rightarrow>(s\<lparr>state_corrupted_parties := insert party (state_corrupted_parties s),
+          state_protocol_parties := map_upds (state_protocol_parties s) [p] [corrupt_party party],
+          state_previous_action := CorruptParty p\<rparr>,
+        CorruptionReply (internal_state party))
+)*)
+consts testmap :: "(party_id, protocol_party) map"
+
 fun adv_step ::
 "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
 "adv_step (s, action)  = 
 (case action of
 Empty \<Rightarrow> (s, AdvNone) | 
 
-CorruptParty p \<Rightarrow> (s\<lparr>state_previous_action := CorruptParty p\<rparr>, AdvNone)|
+CorruptParty p \<Rightarrow> 
+(case state_protocol_parties s p of
+None \<Rightarrow> (s, AdvNone) |
+Some party \<Rightarrow>(s\<lparr>state_corrupted_parties := insert p (state_corrupted_parties s),
+               state_protocol_parties := map_upds (state_protocol_parties s) [p] [corrupt_party party],
+               state_previous_action := CorruptParty p 
+                \<rparr>,
+              AdvNone))|
 
 BufferAction b \<Rightarrow>
-(case protocol_parties (bufferParty b) of 
+(case (state_protocol_parties s) (bufferParty b) of 
 None \<Rightarrow> (s, AdvNone)|
 Some party \<Rightarrow>
 (case bufferAction b of
@@ -122,6 +120,7 @@ Incoming \<Rightarrow>
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> (s, AdvNone)|
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))|
+
 Outgoing \<Rightarrow> 
 (case peek_outgoing_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> (s, AdvNone)|
@@ -130,14 +129,11 @@ Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, 
 Clock \<Rightarrow>
 (case bufferDirection b of
 Incoming \<Rightarrow> 
-(let s = (if (\<exists>p.\<exists>func. 
+(let s0 = (if (\<exists>p.\<exists>func. 
           state_protocol_parties s p = Some party
         \<and> is_corrupted party
         \<and> \<not>(empty_incoming_buffer party func)) 
 then s\<lparr>state_flag := False\<rparr> else s) in
-(case protocol_parties (bufferParty b) of
-None \<Rightarrow> (s, AdvNone) |
-Some party \<Rightarrow> 
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
 None \<Rightarrow> (s, AdvNone) |
@@ -145,16 +141,19 @@ Some m \<Rightarrow>
 (let (write_instructions, reply) = party_call party (bufferFunc b) m in
 (case reply of
 None \<Rightarrow> 
-(s\<lparr>state_protocol_parties := 
-          map_upds (state_protocol_parties s) 
+(s0\<lparr>state_protocol_parties := 
+            map_upds (state_protocol_parties s) 
                    [bufferParty b] 
                    [do_write_instructions party write_instructions],
    state_previous_action := BufferAction b\<rparr>,
 ClockIncomingReply reply) |
 Some r \<Rightarrow> 
-(s\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply)))))))|
+(s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))|
 
 Outgoing \<Rightarrow> 
+(case bufferFunc b of
+None \<Rightarrow> (s, AdvNone) |
+Some func \<Rightarrow>
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
 None \<Rightarrow> (s, AdvNone) |
@@ -165,18 +164,20 @@ Some m \<Rightarrow>
         \<and> is_corrupted party
         \<and> \<not>(empty_incoming_buffer party func)) 
 then False else True) in
-(let new_func_map = state_ideal_functionalities s  in
+(let new_func_map = map_upds (state_ideal_functionalities s) 
+                             [bufferFunc b]
+                             []  in
 (let new_signals = state_outgoing_signals s in 
 (let flag_2 = (case outgoing_signals ((bufferParty b), (bufferFunc b), t1, t2) of
 None \<Rightarrow> False |
 Some boolean \<Rightarrow>  boolean) in
-(s, AdvNone)))))
-)))
-
-)))|
+(s\<lparr>state_flag := flag_1 \<and> flag_2,
+   state_ideal_functionalities := new_func_map,
+   state_outgoing_signals := new_signals\<rparr>, AdvNone)
+)))))))))))|
 
 SendMessage send \<Rightarrow>
-(case protocol_parties (sendParty send) of
+(case (state_protocol_parties s) (sendParty send) of
 None \<Rightarrow> (s, AdvNone) |
 Some party \<Rightarrow> 
 (let m = sendMessage send in
