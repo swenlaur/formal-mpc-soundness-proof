@@ -1,4 +1,4 @@
-theory CompleteExecution00
+theory CompleteExecution03
   imports Main DataTypes
     AdversarialAction ProtocolParty
     StandardFunctionality Environment
@@ -19,7 +19,9 @@ definition env :: environment where
 "env =  \<lparr> env_outgoing_buffers = [] \<rparr>"
 consts ideal_functionalities :: "(functionality_id, standard_functionality) map"
 
+(* No more *)
 consts outgoing_signals :: "(party_id \<times> functionality_id * instance_label * instance_label, bool) map"
+
 
 record  system_state =
   state_protocol_parties ::  "(party_id, protocol_party) map"

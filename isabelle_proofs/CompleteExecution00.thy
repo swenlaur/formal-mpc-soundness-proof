@@ -19,9 +19,7 @@ definition env :: environment where
 "env =  \<lparr> env_outgoing_buffers = [] \<rparr>"
 consts ideal_functionalities :: "(functionality_id, standard_functionality) map"
 
-(* No more *)
 consts outgoing_signals :: "(party_id \<times> functionality_id * instance_label * instance_label, bool) map"
-
 
 record  system_state =
   state_protocol_parties ::  "(party_id, protocol_party) map"
@@ -48,9 +46,6 @@ definition system_state_00 where
 consts repack_write_instr ::
 "party_id \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> ((party_id \<times> functionality_id) \<times> msg) list"
 
-
-(* YIKES! *)
-
 (*
 Adversarial Input Cheat Sheet:
 
@@ -65,45 +60,41 @@ datatype adv_input =
 
 *) 
 
-
-(* 
-
-BUG: loop breaks bc thinks party is party_id, not 'a protocol_party_scheme.
-
-
-
-*)
-
-
-(*hetkeseis
-
-Empty. töötab, aga ei mäleta, miks vaja oli.
-CorruptParty. töötab
-PeekIncomingBuffer. peek_incoming_buffer?
-PeekOutgoingBuffer. sama küss
-
-
-*)
-(* (case party \<in> state_corrupted_parties s of
-True \<Rightarrow> (s, AdvNone) |
-False \<Rightarrow>(s\<lparr>state_corrupted_parties := insert party (state_corrupted_parties s),
-          state_protocol_parties := map_upds (state_protocol_parties s) [p] [corrupt_party party],
-          state_previous_action := CorruptParty p\<rparr>,
-        CorruptionReply (internal_state party))
-)*)
+(* TODO: add Clock \<rightarrow> Send laziness test. *)
 consts testmap :: "(party_id, protocol_party) map"
+
+term "f (x := 1)"
+
+type_synonym adv_step_handler = "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input"
+
+fun handler_buffer_empty_whatever where
+  "handler_buffer_empty_whatever s a = case s of ... \<Rightarrow> Some(newstuff) | _ \<Rightarrow> None"
+
+definition "handlers = [...]"
+
+fun adv_step' ::
+"adv_step_handler list \<Rightarrow> system_state \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
+  "adv_step' [] _ = (s, AdvNone)"
+| "adv_step' (h#hs) sa = (case h sa of Some result \<Rightarrow> result 
+                                     | None \<Rightarrow> adv_step' hs sa)"
+
+definition "adv_step = adv_step' handlers"
+
+lemma "\<exists>h\<in>set handler. h (ss,aa) \<noteq> None"
+  sorry
 
 fun adv_step ::
 "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
-"adv_step (s, action)  = 
+"adv_step (s, action)  =
 (case action of
 Empty \<Rightarrow> (s, AdvNone) | 
 
-CorruptParty p \<Rightarrow> 
+CorruptParty p \<Rightarrow>
 (case state_protocol_parties s p of
 None \<Rightarrow> (s, AdvNone) |
 Some party \<Rightarrow>(s\<lparr>state_corrupted_parties := insert p (state_corrupted_parties s),
-               state_protocol_parties := map_upds (state_protocol_parties s) [p] [corrupt_party party],
+               state_protocol_parties := 
+                  (state_protocol_parties s) (p := Some (corrupt_party party)),
                state_previous_action := CorruptParty p 
                 \<rparr>,
               AdvNone))|
@@ -133,7 +124,8 @@ Incoming \<Rightarrow>
           state_protocol_parties s p = Some party
         \<and> is_corrupted party
         \<and> \<not>(empty_incoming_buffer party func)) 
-then s\<lparr>state_flag := False\<rparr> else s) in
+           then s\<lparr>state_flag := False\<rparr>
+           else s) in
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
 None \<Rightarrow> (s, AdvNone) |
@@ -151,7 +143,7 @@ Some r \<Rightarrow>
 (s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))|
 
 Outgoing \<Rightarrow> 
-(case bufferFunc b of
+(case (state_ideal_functionalities s) (bufferFunc b) of
 None \<Rightarrow> (s, AdvNone) |
 Some func \<Rightarrow>
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in

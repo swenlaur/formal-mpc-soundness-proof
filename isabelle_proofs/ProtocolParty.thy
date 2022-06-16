@@ -70,10 +70,8 @@ definition empty_incoming_buffer ::
 
 definition peek_incoming_buffer ::
 "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg_index \<Rightarrow> msg option" where
-"peek_incoming_buffer p f n = 
-(case (party_incoming_buffers p f) of 
-None \<Rightarrow> None |
-Some msglist \<Rightarrow> Some (nth msglist n))"
+"peek_incoming_buffer p f n = map_option
+  (\<lambda>msglist. nth msglist n) (party_incoming_buffers p f)"
 
 definition peek_outgoing_buffer ::
 "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg_index \<Rightarrow> msg option" where
