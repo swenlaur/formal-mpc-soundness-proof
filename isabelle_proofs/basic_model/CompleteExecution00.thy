@@ -25,6 +25,7 @@ consts ideal_functionalities :: "(functionality_id, standard_functionality) map"
 
 consts outgoing_signals :: "(party_id \<times> functionality_id * instance_label * instance_label, bool) map"
 
+(* Define and instantiate a system state *)
 record  system_state =
   state_protocol_parties ::  "(party_id, protocol_party) map"
   state_env :: environment
@@ -33,7 +34,6 @@ record  system_state =
   state_outgoing_signals :: "(party_id * functionality_id * instance_label * instance_label, bool) map"
   state_previous_action :: adv_action
   state_flag :: bool
-
 
 definition system_state_00 where
 "system_state_00 = \<lparr>
@@ -65,65 +65,36 @@ datatype adv_input =
 *) 
 
 (* TODO: add Clock \<rightarrow> Send laziness test. *)
-consts testmap :: "(party_id, protocol_party) map"
+fun no_action :: "system_state \<Rightarrow> system_state * adv_input" where
+"no_action s = (s, AdvNone)"
 
-term "f (x := 1)"
 
-type_synonym adv_step_handler = "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input"
+fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_corrupt_party s p party = 
 
-fun handler_buffer_empty_whatever where
-  "handler_buffer_empty_whatever s a = case s of ... \<Rightarrow> Some(newstuff) | _ \<Rightarrow> None"
+  (s\<lparr>state_corrupted_parties := insert p (state_corrupted_parties s),
+  state_protocol_parties := (state_protocol_parties s) (p := Some (corrupt_party party)),
+  state_previous_action := CorruptParty p\<rparr>,
 
-definition "handlers = [...]"
+  AdvNone)"
 
-fun adv_step' ::
-"adv_step_handler list \<Rightarrow> system_state \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
-  "adv_step' [] _ = (s, AdvNone)"
-| "adv_step' (h#hs) sa = (case h sa of Some result \<Rightarrow> result 
-                                     | None \<Rightarrow> adv_step' hs sa)"
 
-definition "adv_step = adv_step' handlers"
-
-lemma "\<exists>h\<in>set handler. h (ss,aa) \<noteq> None"
-  sorry
-
-fun adv_step ::
-"system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
-"adv_step (s, action)  =
-(case action of
-Empty \<Rightarrow> (s, AdvNone) | 
-
-CorruptParty p \<Rightarrow>
-(case state_protocol_parties s p of
-None \<Rightarrow> (s, AdvNone) |
-Some party \<Rightarrow>(s\<lparr>state_corrupted_parties := insert p (state_corrupted_parties s),
-               state_protocol_parties := 
-                  (state_protocol_parties s) (p := Some (corrupt_party party)),
-               state_previous_action := CorruptParty p 
-                \<rparr>,
-              AdvNone))|
-
-BufferAction b \<Rightarrow>
-(case (state_protocol_parties s) (bufferParty b) of 
-None \<Rightarrow> (s, AdvNone)|
-Some party \<Rightarrow>
-(case bufferAction b of
-
-Peek \<Rightarrow>
-(case bufferDirection b of
-Incoming \<Rightarrow> 
+fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_peek_incoming_buffer s b party = 
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
-None \<Rightarrow> (s, AdvNone)|
-Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))|
+None \<Rightarrow> no_action s |
+Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
-Outgoing \<Rightarrow> 
+
+fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_peek_outgoing_buffer s b party = 
 (case peek_outgoing_buffer party (bufferFunc b) (bufferInd b) of
-None \<Rightarrow> (s, AdvNone)|
-Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m)))|
+None \<Rightarrow> no_action s|
+Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
-Clock \<Rightarrow>
-(case bufferDirection b of
-Incoming \<Rightarrow> 
+
+fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_clock_incoming_buffer s b party = 
 (let s0 = (if (\<exists>p.\<exists>func. 
           state_protocol_parties s p = Some party
         \<and> is_corrupted party
@@ -144,9 +115,10 @@ None \<Rightarrow>
    state_previous_action := BufferAction b\<rparr>,
 ClockIncomingReply reply) |
 Some r \<Rightarrow> 
-(s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))|
+(s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))"
 
-Outgoing \<Rightarrow> 
+fun adv_clock_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_clock_outgoing_buffer s b party = 
 (case (state_ideal_functionalities s) (bufferFunc b) of
 None \<Rightarrow> (s, AdvNone) |
 Some func \<Rightarrow>
@@ -170,12 +142,24 @@ Some boolean \<Rightarrow>  boolean) in
 (s\<lparr>state_flag := flag_1 \<and> flag_2,
    state_ideal_functionalities := new_func_map,
    state_outgoing_signals := new_signals\<rparr>, AdvNone)
-)))))))))))|
+))))))))"
 
-SendMessage send \<Rightarrow>
-(case (state_protocol_parties s) (sendParty send) of
-None \<Rightarrow> (s, AdvNone) |
-Some party \<Rightarrow> 
+
+fun adv_buffer_action :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
+"adv_buffer_action s b party = 
+(case bufferAction b of
+Peek \<Rightarrow>
+(case bufferDirection b of
+Incoming \<Rightarrow> adv_peek_incoming_buffer s b party |
+Outgoing \<Rightarrow> adv_peek_outgoing_buffer s b party )|
+Clock \<Rightarrow> 
+(case bufferDirection b of
+Incoming \<Rightarrow> adv_clock_incoming_buffer s b party |
+Outgoing \<Rightarrow> adv_clock_outgoing_buffer s b party))"
+
+
+fun adv_send_message :: "system_state \<Rightarrow> send_message \<Rightarrow> protocol_party \<Rightarrow>  system_state * adv_input" where
+"adv_send_message s send party =
 (let m = sendMessage send in
 (let (write_instructions, reply) = party_call party (sendFunc send) m in
 (case reply of
@@ -187,46 +171,38 @@ None \<Rightarrow>
 state_previous_action := SendMessage send\<rparr>,
        ClockIncomingReply reply) |
 Some r \<Rightarrow> 
-(s\<lparr>state_previous_action := SendMessage send\<rparr>, ClockIncomingReply reply)))))
-|
+(s\<lparr>state_previous_action := SendMessage send\<rparr>, ClockIncomingReply reply))))"
 
-InvokeEnvironment m \<Rightarrow> (s, InvokeEnvironmentReply (env_adv_probe env m)) |
-
-QueryFunctionality q \<Rightarrow> (case ideal_functionalities (queryTarget q) of
-None \<Rightarrow>  (s, AdvNone) |
-Some fnl \<Rightarrow> (s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))))"
+fun adv_invoke_environment :: "system_state \<Rightarrow> msg \<Rightarrow>  system_state * adv_input" where
+"adv_invoke_environment s m = (s, InvokeEnvironmentReply (env_adv_probe env m))"
 
 
-(*
-
-(let flag1 = in
-(let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
-(case opt_m of 
-None \<Rightarrow> (s, AdvNone) |
-Some m \<Rightarrow>
-(let flag2 =
-(let (t1, t2) = get_protocol_instances m in
- in
-(s\<lparr>state_flag := flag2 \<and> flag1, state_previous_action := BufferAction b\<rparr>, AdvNone)
-))))))) |
+fun adv_query_functionality :: 
+"system_state \<Rightarrow> query_functionality \<Rightarrow> standard_functionality \<Rightarrow> system_state * adv_input" where
+"adv_query_functionality s q fnl = 
+(s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))"
 
 
-*)
-
-(* 
-
-(case opt_m of 
-None \<Rightarrow> (s, AdvNone) |
-Some m \<Rightarrow>
-(let (write_instructions, reply) = party_call party f m in
-(case reply of
-None \<Rightarrow> (s\<lparr>state_protocol_parties := 
-          map_upds (state_protocol_parties s) 
-                   [bufferParty b] 
-                   [do_write_instructions party write_instructions]\<rparr>,
-       ClockIncomingReply reply) |
-Some r \<Rightarrow> (s, ClockIncomingReply reply))))
-)
-
-*)
+fun adv_step ::
+"system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
+"adv_step (s, action)  =
+(case action of
+Empty => no_action s |
+CorruptParty p \<Rightarrow> 
+  (case state_protocol_parties s p of
+  None \<Rightarrow> no_action s |
+  Some party \<Rightarrow> adv_corrupt_party s p party) |
+BufferAction b \<Rightarrow>
+  (case (state_protocol_parties s) (bufferParty b) of 
+  None \<Rightarrow> no_action s |
+  Some party \<Rightarrow> adv_buffer_action s b party) |
+SendMessage send \<Rightarrow>
+  (case (state_protocol_parties s) (sendParty send) of
+  None \<Rightarrow> no_action s |
+  Some party \<Rightarrow> adv_send_message s send party) |
+InvokeEnvironment m \<Rightarrow> adv_invoke_environment s m |
+QueryFunctionality q \<Rightarrow> 
+  (case ideal_functionalities (queryTarget q) of
+  None \<Rightarrow>  no_action s |
+  Some fnl \<Rightarrow> adv_query_functionality s q fnl))"
 end

@@ -4,7 +4,7 @@ theory CompleteExecution00
     AdversarialAction 
     ProtocolParty
     StandardFunctionality
-    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/DataTypes"
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Environment"
 begin
 

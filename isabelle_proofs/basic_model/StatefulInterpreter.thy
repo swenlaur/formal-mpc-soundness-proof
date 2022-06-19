@@ -16,9 +16,8 @@ record stateful_interpreter =
   int_program :: "cmd list"
   int_incoming_buffers :: "int_msg list"
   int_outgoing_buffers :: "msg list"
-  int_state :: "(instance_label, instance_state \<times> nat) map" 
+  int_count_and_state :: "(instance_label, nat \<times> nat * instance_state) map" 
   int_port_count :: nat
-  int_program_count :: "(instance_label, nat \<times> nat) map"
 
 
 definition get_label :: "int_msg \<Rightarrow> instance_label option" where
@@ -29,36 +28,46 @@ InitMsg (te, t, m) \<Rightarrow> Some t)"
 
 definition start_counter :: 
 "'a stateful_interpreter_scheme \<Rightarrow> instance_label \<Rightarrow> 'a stateful_interpreter_scheme" where
-"start_counter s t = s\<lparr>int_program_count := (int_program_count s)(t := Some (1,0))\<rparr>"
+"start_counter s t = 
+s\<lparr>int_count_and_state := (int_count_and_state s)(t := Some (1, 0, InstanceState None))\<rparr>"
+
+
 
 (*Conditional doers of Init/Sleep/Eval/Jump/Send/DMA: return Some interpreter if conditions are right,
 None if not *)
-definition init :: "'a stateful_interpreter_scheme \<Rightarrow> ('a stateful_interpreter_scheme option)" where
-"init s = (if
-\<exists>te t m. (int_incoming_buffers s) ! 0 = InitMsg (te, t, m) \<and> int_program_count s t = None
-then 
-let t = get_label ((int_incoming_buffers s) ! 0) in (map_option start_counter s t)
-else None)"
+definition init :: 
+"'a stateful_interpreter_scheme \<Rightarrow> ('a stateful_interpreter_scheme option)" where
+"init s = 
+  (if
+  \<exists>te t m. (int_incoming_buffers s) ! 0 = InitMsg (te, t, m) 
+  \<and> int_count_and_state s t = None
+  then 
+    let t = get_label ((int_incoming_buffers s) ! 0) in (map_option (start_counter s) t)
+  else None)"
 
-
-definition set_smth :: "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
+definition set_smth :: 
+"'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "set_smth s = (if \<exists>n. int_port_count s = n 
 then let n = int_port_count s in Some (s\<lparr>int_port_count := n + 1\<rparr>) 
 else None)"
 
-definition sleep :: "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
+definition sleep :: 
+"'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "sleep s = (if
 True
 then Some s
 else None)"
 
-definition eval :: "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
+definition eval :: 
+"'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "eval s = (if
 True
 then Some s
 else None)"
 
-definition jump :: "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
+
+definition jump :: 
+"'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "jump s = (if
 True
 then Some s
@@ -66,21 +75,6 @@ else (if
 True 
 then Some s
 else None))"
-
-
-
-
-
-(* A decider that decides which instruction the stateful interpreter should execute *)
-definition decide_instruction :: "'a stateful_interpreter_scheme \<Rightarrow> interpreter_instruction" where
-"decide_instruction s = 
-(case instr_is_init s of
-True \<Rightarrow> InitInstr |
-False \<Rightarrow>
-
-(case instr_is_sleep s of
-True \<Rightarrow> SleepInstr |
-False \<Rightarrow> NoneInstr))"
 
 
 (* Tries to do stuff, if fails, goes to next possible do *)
@@ -110,8 +104,8 @@ definition interpreter_call ::
 (* ============================================================================================== *)
 
 definition reveal_state ::
-"'a stateful_interpreter_scheme \<Rightarrow>(instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" where
-"reveal_state i = (int_state i, int_public_params i, int_private_params i)"
+"'a stateful_interpreter_scheme \<Rightarrow> (instance_label, nat \<times> nat * instance_state) map \<times> public_param \<times> private_param" where
+"reveal_state i = (int_count_and_state i, int_public_params i, int_private_params i)"
 
 (* Looks at state of interpreter *)
 

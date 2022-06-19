@@ -88,10 +88,8 @@ definition do_write_instructions ::
 "'a protocol_party_scheme \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> 'a protocol_party_scheme" where
 "do_write_instructions p w = p\<lparr>party_outgoing_buffers := (update_outgoing_buffers (party_outgoing_buffers p) w)\<rparr>"
 
-definition party_call ::
-"'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg
- \<Rightarrow> ((functionality_id \<times> msg) list) \<times> ((functionality_id \<times> msg) option)" where
+definition party_call :: "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg  \<Rightarrow> ((functionality_id \<times> msg) list) \<times> ((functionality_id \<times> msg) option)" where
 "party_call p f m = (if party_corrupted p = True then ([], Some (f, m)) 
-               else (interpreter_call (party_interpreter p) f m, None))"
+               else (interpreter_call (party_interpreter p), None))"
 
 end
