@@ -1,5 +1,8 @@
 theory ProtocolParty
-  imports Main DataTypes StatefulInterpreter
+  imports 
+    Main 
+    StatefulInterpreter
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/DataTypes"
 begin
 
 record protocol_party =

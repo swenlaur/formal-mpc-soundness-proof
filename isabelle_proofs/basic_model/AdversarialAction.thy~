@@ -1,5 +1,7 @@
 theory AdversarialAction
-  imports Main DataTypes
+  imports
+    Main 
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/DataTypes"
 begin
 
 

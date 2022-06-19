@@ -1,7 +1,11 @@
 theory CompleteExecution00
-  imports Main DataTypes
-    AdversarialAction ProtocolParty
-    StandardFunctionality Environment
+  imports 
+    Main 
+    AdversarialAction 
+    ProtocolParty
+    StandardFunctionality
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Environment"
 begin
 
 definition n :: nat where "n = 2"

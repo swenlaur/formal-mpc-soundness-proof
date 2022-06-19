@@ -1,5 +1,7 @@
 theory Environment
-  imports Main DataTypes ParentParty 
+  imports 
+    Main 
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
 begin
 record environment =
   env_outgoing_buffers :: "msg list list" 

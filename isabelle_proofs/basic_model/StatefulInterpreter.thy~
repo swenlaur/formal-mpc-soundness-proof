@@ -1,5 +1,7 @@
 theory StatefulInterpreter
-  imports Main DataTypes 
+  imports 
+    Main 
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/DataTypes"
 begin
 
 datatype cmd = Eval | Jump | Send | DMACall 
@@ -10,6 +12,7 @@ datatype interpreter_instruction = NoneInstr | InitInstr | SleepInstr | EvalInst
 record stateful_interpreter =
   int_public_params :: public_param
   int_private_params :: private_param
+
   int_program :: "cmd list"
   int_incoming_buffers :: "int_msg list"
   int_outgoing_buffers :: "msg list"
@@ -31,11 +34,12 @@ definition start_counter ::
 (*Conditional doers of Init/Sleep/Eval/Jump/Send/DMA: return Some interpreter if conditions are right,
 None if not *)
 definition init :: "'a stateful_interpreter_scheme \<Rightarrow> ('a stateful_interpreter_scheme option)" where
-"init s = (if 
+"init s = (if
 \<exists>te t m. (int_incoming_buffers s) ! 0 = InitMsg (te, t, m) \<and> int_program_count s t = None
 then 
 let t = get_label ((int_incoming_buffers s) ! 0) in (map_option start_counter s t)
 else None)"
+
 
 definition set_smth :: "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "set_smth s = (if \<exists>n. int_port_count s = n 
