@@ -1,0 +1,18 @@
+theory Environment
+  imports 
+    Main 
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
+begin
+
+record functionality =
+  env_outgoing_buffers :: "msg list list" 
+
+consts env_call :: "'a functionality_scheme \<Rightarrow> functionality_id \<Rightarrow> msg \<Rightarrow> msg option"
+
+consts env_adv_probe :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg"
+(* võiks saata write_instructioneid *)
+
+definition set_outgoing_buffers :: "'a functionality_scheme \<Rightarrow> msg list list \<Rightarrow> 'a functionality_scheme" where
+"set_outgoing_buffers e bl = e\<lparr> env_outgoing_buffers := bl \<rparr>"
+
+end

@@ -25,7 +25,7 @@ definition internal_state ::
 \<Rightarrow> (instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" where
 "internal_state p = reveal_state (party_interpreter p)"
 
-
+fun get_type :: 'a \<Rightarrow>
 (* Helper list methods *)
 fun fst_unzip :: "('a \<times> 'b) list \<Rightarrow> 'a list" where
   "fst_unzip [] = []" |

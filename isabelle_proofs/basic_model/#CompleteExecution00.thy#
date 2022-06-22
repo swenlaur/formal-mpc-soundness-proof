@@ -2,10 +2,11 @@ theory CompleteExecution00
   imports 
     Main 
     AdversarialAction 
+    BasicState
     ProtocolParty
     StandardFunctionality
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
-    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Environment"
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Functionality"
 begin
 
 definition n :: nat where "n = 2"
@@ -18,37 +19,24 @@ consts parameters_parties :: "(party_id, public_param \<times> private_param) ma
 consts parameters_functionalities :: "(functionality_id, public_param \<times> private_param) map"
 consts parameters_adversary :: "public_param \<times> private_param"
 
-
+(* These need to get defined if we want an actual run *)
 consts protocol_parties :: "(party_id, protocol_party) map"
-(* Siin add env *)
-consts functionalities :: "(functionality_id, standard_functionality) map"
+consts functionalities :: "(functionality_id, functionality) map"
 
 (* Nimeta ümber? *)
 consts outgoing_signals :: "(party_id \<times> functionality_id * instance_label * instance_label, bool) map"
 
-(* Viia välja *)
-record  system_state =
-  state_protocol_parties ::  "(party_id, protocol_party) map"
-  state_ideal_functionalities :: "(functionality_id, standard_functionality) map"
-  state_corrupted_parties :: "party_id set"
-  state_outgoing_signals :: "(party_id * functionality_id * instance_label * instance_label, bool) map"
-  state_previous_action :: adv_action
-  state_flag :: bool
 
 definition system_state_00 where
 "system_state_00 = \<lparr>
  state_protocol_parties = protocol_parties,
- state_env = env,
- state_ideal_functionalities = ideal_functionalities,
+ state_functionalities = functionalities,
  state_corrupted_parties = {},
  state_outgoing_signals = outgoing_signals,
  state_previous_action = Empty,
  state_flag = True
  \<rparr>"
 
-(* Vist ei ole vajalik? *)
-consts repack_write_instr ::
-"party_id \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> ((party_id \<times> functionality_id) \<times> msg) list"
 
 (* Tükeldada (iga fn kohta) *)
 (*
@@ -63,14 +51,36 @@ datatype adv_input =
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg
 *)
-
 (* TODO: add Clock \<rightarrow> Send laziness test. *)
+
+
 fun no_action :: "system_state \<Rightarrow> system_state * adv_input" where
+(* 
+Võtab:
+süsteemi olek s 
+
+Annab:
+sama olek s, 
+tühivastus AdvNone 
+*)
 "no_action s = (s, AdvNone)"
 
 
 fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_corrupt_party s p party = 
+(* 
+Võtab:
+süsteemi oleku (s) 
+korrumpeeritava mängija party_id (p)
+mängija (party)
+
+Annab:
+oleku s, kus
+  1. corrupted_parties hulka on lisatud p
+  2. protocol_parties loend on uuendatud nii, et p väärtus on nüüd korrumpeeritud party,
+  3. eelmine tegevus on nüüd korrumpeerimine,
+tühivastuse AdvNone 
+*)
+"adv_corrupt_party s p party =
   (s\<lparr>
     state_corrupted_parties := insert p (state_corrupted_parties s),
     state_protocol_parties := (state_protocol_parties s) (p := corrupt_party party),
@@ -80,7 +90,7 @@ fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> prot
 
 
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_peek_incoming_buffer s b party = 
+"adv_peek_incoming_buffer s b party =
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
@@ -93,15 +103,19 @@ None \<Rightarrow> no_action s|
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
 (* write instructions tegemine eraldi pakkida state \<Rightarrow> wi \<Rightarrow> state *)
-(* s0 osa teha eraldi funktsiooniks state \<Rightarrow> state *)
+fun laziness_check_1 :: "system_state \<Rightarrow> system_state" where
+"laziness_check_1 s = (if (\<exists>p func party'. 
+          state_protocol_parties s p = Some party'
+        \<and> is_corrupted party'
+        \<and> \<not>(empty_incoming_buffer party' func)) 
+           then s\<lparr>state_flag := False\<rparr>
+           else s)"
+
+fun make_write_instructions :: "system_state"
+
 fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_incoming_buffer s b party = 
-(let s0 = (if (\<exists>p.\<exists>func. 
-          state_protocol_parties s p = Some party
-        \<and> is_corrupted party
-        \<and> \<not>(empty_incoming_buffer party func)) 
-           then s\<lparr>state_flag := False\<rparr>
-           else s) in
+(let s0 = laziness_check_1 s in
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
 None \<Rightarrow> no_action s |
@@ -117,7 +131,6 @@ None \<Rightarrow>
 ClockIncomingReply reply) |
 Some r \<Rightarrow> 
 (s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))"
-(* Env as a functionality *)
 
 fun adv_clock_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_outgoing_buffer s b party = 
@@ -134,7 +147,7 @@ Some m \<Rightarrow>
         \<and> is_corrupted party
         \<and> \<not>(empty_incoming_buffer party func)) 
 then False else True) in
-(let new_func_map = map_upds (state_ideal_functionalities s) 
+(let new_func_map = map_upds (state_functionalities s) 
                              [bufferFunc b]
                              []  in
 (let new_signals = state_outgoing_signals s in 
@@ -175,6 +188,7 @@ state_previous_action := SendMessage send\<rparr>,
 Some r \<Rightarrow> 
 (s\<lparr>state_previous_action := SendMessage send\<rparr>, ClockIncomingReply reply))))"
 
+(* Join invoke and query *)
 fun adv_invoke_environment :: "system_state \<Rightarrow> msg \<Rightarrow>  system_state * adv_input"
 where
 "adv_invoke_environment s m = (s, InvokeEnvironmentReply (env_adv_probe env m))"

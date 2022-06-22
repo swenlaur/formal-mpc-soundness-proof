@@ -1,7 +1,7 @@
 theory StandardFunctionality
   imports 
     Main 
-    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/DataTypes"
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
 begin
 
 typedecl sharing_module

@@ -3,13 +3,13 @@ theory DataTypes
 begin
 
 (* Types made up for the project *)
-typedecl msg
+typedecl payload 
+datatype msg = Message "nat * nat * payload"
 typedecl party_id 
 typedecl functionality_id
 type_synonym msg_index = nat
-typedecl module_type 
-typedecl state 
 (* Obviously state can't remain like this. *)
+typedecl module_type 
 
 typedecl public_param (* Not sure if they're necessary, still *)
 typedecl private_param 
@@ -49,8 +49,8 @@ datatype protocol_description = ProtocolDescription "code list"
 type_synonym write_instructions = "(functionality_id \<times> msg) list"
 
 datatype adv_input =  
-  AdvNone |
-  CorruptionReply "state \<times> public_param \<times> private_param" |
+  AdvNone |             
+  CorruptionReply "(instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" |
   PeekReply msg |
   ClockIncomingReply "(functionality_id \<times> msg) option" |
   SendIncomingReply write_instructions |
