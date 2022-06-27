@@ -4,18 +4,21 @@ theory StatefulInterpreter
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
 begin
 
-datatype cmd = Eval | Jump | Send | DMACall 
-datatype int_msg = Any msg | InitMsg "instance_label * instance_label * msg"
-datatype interpreter_instruction = NoneInstr | InitInstr | SleepInstr | EvalInstr |
+datatype cmd = Sleep | Eval | Jump | Send | DMACall 
+datatype int_msg = Any msg |
+ InitMsg "instance_label * instance_label * msg" |
+ SleepMsg instance_label
+
+datatype interpreter_instruction =
+ NoneInstr | InitInstr | SleepInstr | EvalInstr |
  JumpInstr nat | SendInstr nat | DMAOutInstr nat | DMAInInstr nat
 
 record stateful_interpreter =
   int_public_params :: public_param
   int_private_params :: private_param
-
   int_program :: "cmd list"
   int_incoming_buffers :: "int_msg list"
-  int_outgoing_buffers :: "msg list"
+  int_outgoing_buffers :: "int_msg list"
   int_count_and_state :: "(instance_label, nat \<times> nat * instance_state) map" 
   int_port_count :: nat
 
@@ -51,15 +54,24 @@ else None)"
 
 definition sleep :: 
 "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
-"sleep s = (if
-True
-then Some s
+"sleep s = 
+  (if
+  \<exists>t n1 n2 is. (int_count_and_state s) t = Some (n1, n2, is)
+  \<and> n2  = 0
+  \<and> (int_program s) ! n1 = Sleep
+then 
+(case  get_label ((int_incoming_buffers s) ! 0) of 
+None \<Rightarrow> None |
+Some t \<Rightarrow>  Some (s\<lparr>int_outgoing_buffers := SleepMsg t # (int_outgoing_buffers s)\<rparr>))
 else None)"
+
 
 definition eval :: 
 "'a stateful_interpreter_scheme \<Rightarrow> 'a stateful_interpreter_scheme option" where
 "eval s = (if
-True
+  \<exists>t n1 n2 is. (int_count_and_state s) t = Some (n1, n2, is)
+  \<and> n2  = 0
+  \<and> (int_program s) ! n1 = Eval
 then Some s
 else None)"
 

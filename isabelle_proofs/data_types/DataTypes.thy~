@@ -1,5 +1,6 @@
 theory DataTypes
-  imports Main
+  imports 
+    Main 
 begin
 
 (* Types made up for the project *)
@@ -56,5 +57,4 @@ datatype adv_input =
   SendIncomingReply write_instructions |
   InvokeEnvironmentReply msg | (* Any type in Python *)
   QueryFunctionalityReply msg
-
 end

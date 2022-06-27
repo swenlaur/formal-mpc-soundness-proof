@@ -4,22 +4,14 @@ theory StatefulInterpreter
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
 begin
 
-datatype cmd = Sleep | Eval | Jump | Send | DMACall 
-datatype int_msg = Any msg |
- InitMsg "instance_label * instance_label * msg" |
- SleepMsg instance_label
-
-datatype interpreter_instruction =
- NoneInstr | InitInstr | SleepInstr | EvalInstr |
- JumpInstr nat | SendInstr nat | DMAOutInstr nat | DMAInInstr nat
-
+(* k+2 incoming and outgoing buffers *)
 record stateful_interpreter =
   int_public_params :: public_param
   int_private_params :: private_param
   int_program :: "cmd list"
   int_incoming_buffers :: "int_msg list"
   int_outgoing_buffers :: "int_msg list"
-  int_count_and_state :: "(instance_label, nat \<times> nat * instance_state) map" 
+  int_count_and_state :: "(instance_label, nat \<times> nat \<times> instance_state) map" 
   int_port_count :: nat
 
 
@@ -114,7 +106,7 @@ definition interpreter_call ::
 (* ============================================================================================== *)
 
 definition reveal_state ::
-"'a stateful_interpreter_scheme \<Rightarrow> (instance_label, nat \<times> nat * instance_state) map \<times> public_param \<times> private_param" where
+"'a stateful_interpreter_scheme \<Rightarrow> (instance_label, nat * nat * instance_state) map \<times> public_param \<times> private_param" where
 "reveal_state i = (int_count_and_state i, int_public_params i, int_private_params i)"
 
 (* Looks at state of interpreter *)

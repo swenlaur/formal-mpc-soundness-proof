@@ -2,60 +2,113 @@ theory CompleteExecution00
   imports 
     Main 
     AdversarialAction 
+    BasicState
     ProtocolParty
     StandardFunctionality
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
-    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Environment"
+    "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/network_components/Functionality"
 begin
 
-definition n :: nat where "n = 2"
-definition k :: nat where "k = 2" 
+(* ============= Näide: 2 mängijat, 2 funktsionaalsust, keskkond ========================== *)
 
-consts protocol_description :: "(party_id, code) map"
-consts get_protocol_instances :: "msg \<Rightarrow> instance_label \<times> instance_label"
+  (* Mängija 1 *)
+consts parameters1 :: "public_param * private_param"
+consts code1 :: "cmd list"
+definition interpreter1 :: stateful_interpreter where 
+"interpreter1 =
+  \<lparr>
+  int_public_params = fst (parameters1),
+  int_private_params = snd (parameters1),
+  int_program = code1,
+  int_incoming_buffers = [],
+  int_outgoing_buffers = [],
+  int_count_and_state = \<lambda>x. None,
+  int_port_count = 2
+  \<rparr>"
+definition party1 :: protocol_party where 
+"party1 = 
+  \<lparr>
+  party_interpreter = interpreter1,
+  party_corrupted = False,
+  party_incoming_buffers =  map_of [(0, []),(1, [])],
+  party_outgoing_buffers =  map_of [(0, []),(1, [])]
+  \<rparr>"
 
-consts parameters_parties :: "(party_id, public_param \<times> private_param) map"
-consts parameters_functionalities :: "(functionality_id, public_param \<times> private_param) map"
-consts parameters_adversary :: "public_param \<times> private_param"
+  (* Mängija 2 *)
+consts parameters2 :: "public_param * private_param"
+consts code2 :: "cmd list"
+definition interpreter2 :: stateful_interpreter where 
+"interpreter2 =
+  \<lparr>
+  int_public_params = fst (parameters2),
+  int_private_params = snd (parameters2),
+  int_program = code2,
+  int_incoming_buffers = [],
+  int_outgoing_buffers = [],
+  int_count_and_state = \<lambda>x. None,
+  int_port_count = 2
+  \<rparr>"
+definition party2 :: protocol_party where 
+"party2 = 
+  \<lparr>
+  party_interpreter = interpreter2,
+  party_corrupted = False,
+  party_incoming_buffers =  map_of [(0, []),(1, [])],
+  party_outgoing_buffers =  map_of [(0, []),(1, [])]
+  \<rparr>"
+
+  (* Funktsionaalsus 1 *)
+definition fnl1 :: functionality where
+"fnl1 = 
+  \<lparr>
+  fnl_outgoing_buffers = [[],[]], 
+  fnl_is_env = False
+  \<rparr>"
+
+  (* Funktsionaalsus 2 *)
+definition fnl2 :: functionality where
+"fnl2 = 
+  \<lparr>
+  fnl_outgoing_buffers = [[],[]], 
+  fnl_is_env = False
+  \<rparr>"
+
+  (* Funktsionaalsus 3: keskkond *)
+definition env :: functionality where
+"env = 
+  \<lparr>
+  fnl_outgoing_buffers = [[],[]], 
+  fnl_is_env = True
+  \<rparr>"
 
 
-consts protocol_parties :: "(party_id, protocol_party) map"
-definition env :: environment where
-"env =  \<lparr> env_outgoing_buffers = [] \<rparr>"
-(* Siin add env *)
-consts ideal_functionalities :: "(functionality_id, standard_functionality) map"
+  (* Mängijate map *)
+definition protocol_parties_00 where
+"protocol_parties_00 = map_of [(1, party1), (2, party2)]"
 
-(* Nimeta ümber? *)
-consts outgoing_signals :: "(party_id \<times> functionality_id * instance_label * instance_label, bool) map"
+  (* Funktsionaalsuste map *)
+definition protocol_fnl_00  where
+"protocol_fnl_00 = map_of [(1, fnl1), (2, fnl2), (3, env)]"
 
-(* Viia välja *)
-record  system_state =
-  state_protocol_parties ::  "(party_id, protocol_party) map"
-  state_env :: environment
-  state_ideal_functionalities :: "(functionality_id, standard_functionality) map"
-  state_corrupted_parties :: "party_id set"
-  state_outgoing_signals :: "(party_id * functionality_id * instance_label * instance_label, bool) map"
-  state_previous_action :: adv_action
-  state_flag :: bool
+  (* Laziness checki signaalide map *)
+     (* nimetada ümber? *)
+definition outgoing_signals_00 where
+"outgoing_signals_00 = (\<lambda>x. None)"
 
+  (* Olek *)
 definition system_state_00 where
-"system_state_00 = \<lparr>
- state_protocol_parties = protocol_parties,
- state_env = env,
- state_ideal_functionalities = ideal_functionalities,
- state_corrupted_parties = {},
- state_outgoing_signals = outgoing_signals,
- state_previous_action = Empty,
- state_flag = True
- \<rparr>"
+"system_state_00 = 
+  \<lparr>
+  state_protocol_parties = protocol_parties_00,
+  state_functionalities = protocol_fnl_00,
+  state_corrupted_parties = {},
+  state_outgoing_signals = outgoing_signals_00,
+  state_previous_action = Empty,
+  state_flag = True
+  \<rparr>"
 
-(* Vist ei ole vajalik? *)
-consts repack_write_instr ::
-"party_id \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> ((party_id \<times> functionality_id) \<times> msg) list"
-
-(* Tükeldada (iga fn kohta) *)
-(*
-Adversarial Input Cheat Sheet:
+(* ============================================================================================== *)
+(* NB!
 
 datatype adv_input =  
   AdvNone |
@@ -67,13 +120,33 @@ datatype adv_input =
   QueryFunctionalityReply msg
 *)
 
-(* TODO: add Clock \<rightarrow> Send laziness test. *)
 fun no_action :: "system_state \<Rightarrow> system_state * adv_input" where
+(* 
+Võtab:
+süsteemi olek s 
+
+Annab:
+sama olek s, 
+tühi vastus AdvNone 
+*)
 "no_action s = (s, AdvNone)"
 
 
 fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_corrupt_party s p party = 
+(* 
+Võtab:
+s: süsteemi olek
+p: korrumpeeritava mängija party_id
+party: mängija
+
+Annab:
+s:
+  1. corrupted_parties hulka on lisatud p
+  2. protocol_parties loend on uuendatud nii, et p väärtus on nüüd korrumpeeritud party,
+  3. eelmine tegevus on nüüd korrumpeerimine,
+tühivastuse AdvNone 
+*)
+"adv_corrupt_party s p party =
   (s\<lparr>
     state_corrupted_parties := insert p (state_corrupted_parties s),
     state_protocol_parties := (state_protocol_parties s) (p := corrupt_party party),
@@ -83,71 +156,97 @@ fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> prot
 
 
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_peek_incoming_buffer s b party = 
+(* 
+s: olek
+b: BufferAction record (vt AdversarialAction.thy)
+party: mängija
+
+\<Rightarrow> 
+olek, mille PreviousAction on nüüd b,
+vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
+*)
+"adv_peek_incoming_buffer s b party =
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
 
 fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_peek_outgoing_buffer s b party = 
+(* 
+s: olek
+b: BufferAction record (vt AdversarialAction.thy)
+party: mängija
+
+\<Rightarrow> 
+olek, mille PreviousAction on nüüd b,
+vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
+*)
+"adv_peek_outgoing_buffer s b party =
 (case peek_outgoing_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s|
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
-(* write instructions tegemine eraldi pakkida state \<Rightarrow> wi \<Rightarrow> state *)
-(* s0 osa teha eraldi funktsiooniks state \<Rightarrow> state *)
+fun laziness_check :: "system_state \<Rightarrow> system_state" where
+"laziness_check s = (if (\<exists>p func party'. 
+          state_protocol_parties s p = Some party'
+        \<and> is_corrupted party'
+        \<and> \<not>(empty_incoming_buffer party' func)) 
+           then s\<lparr>state_flag := False\<rparr>
+           else s)"
+
 fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_incoming_buffer s b party = 
-(let s0 = (if (\<exists>p.\<exists>func. 
-          state_protocol_parties s p = Some party
-        \<and> is_corrupted party
-        \<and> \<not>(empty_incoming_buffer party func)) 
-           then s\<lparr>state_flag := False\<rparr>
-           else s) in
+(let s0 = laziness_check s in
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
-None \<Rightarrow> no_action s |
-Some m \<Rightarrow>
-(let (write_instructions, reply) = party_call party (bufferFunc b) m in
-(case reply of
-None \<Rightarrow> 
-(s0\<lparr>state_protocol_parties := 
-            map_upds (state_protocol_parties s) 
-                   [bufferParty b] 
-                   [do_write_instructions party write_instructions],
-   state_previous_action := BufferAction b\<rparr>,
-ClockIncomingReply reply) |
-Some r \<Rightarrow> 
-(s0\<lparr>state_previous_action := BufferAction b\<rparr>, ClockIncomingReply reply))))))"
-(* Env as a functionality *)
+  None \<Rightarrow> no_action s |
+  Some m \<Rightarrow>
+    (let (write_instructions, reply) = party_make_write_instructions party (bufferFunc b) m in
+    (case reply of
+    None \<Rightarrow> 
+    (s0\<lparr>
+        state_protocol_parties := map_upds (state_protocol_parties s) [bufferParty b] [do_write_instructions party write_instructions],
+        state_previous_action := BufferAction b
+       \<rparr>,ClockIncomingReply reply) |
+    Some r \<Rightarrow> 
+    (s0\<lparr>
+        state_previous_action := BufferAction b
+       \<rparr>, ClockIncomingReply reply))))))"
 
+fun adv_clock_flag_1 :: "system_state \<Rightarrow> bool" where
+"adv_clock_flag_1 s = (if (\<exists>p func part.
+          state_protocol_parties s p = Some part
+        \<and> is_corrupted part
+        \<and> \<not>(empty_incoming_buffer part func)) 
+then False else True)"
+
+fun adv_clock_flag_2 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> bool" where
+"adv_clock_flag_2 s b m = 
+(let (t1, t2) = get_protocol_instances m in
+(case (state_outgoing_signals s) ((bufferParty b), (bufferFunc b), t1, t2) of
+None \<Rightarrow> False |
+Some boolean \<Rightarrow>  boolean))"
+
+(* Fig. out what the map upds is supposed to be, and what the new signals are supposed to be. *)
 fun adv_clock_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_outgoing_buffer s b party = 
-(case (state_ideal_functionalities s) (bufferFunc b) of
+(case (state_functionalities s) (bufferFunc b) of
 None \<Rightarrow> (s, AdvNone) |
 Some func \<Rightarrow>
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
 None \<Rightarrow> (s, AdvNone) |
 Some m \<Rightarrow> 
-(let (t1, t2) = get_protocol_instances m in
-(let flag_1 =  (if (\<exists>p.\<exists>func. 
-          state_protocol_parties s p = Some party
-        \<and> is_corrupted party
-        \<and> \<not>(empty_incoming_buffer party func)) 
-then False else True) in
-(let new_func_map = map_upds (state_ideal_functionalities s) 
+(let flag_1 = adv_clock_flag_1 s  in
+(let new_func_map = map_upds (state_functionalities s) 
                              [bufferFunc b]
                              []  in
 (let new_signals = state_outgoing_signals s in 
-(let flag_2 = (case outgoing_signals ((bufferParty b), (bufferFunc b), t1, t2) of
-None \<Rightarrow> False |
-Some boolean \<Rightarrow>  boolean) in
+(let flag_2 = adv_clock_flag_2 in
 (s\<lparr>state_flag := flag_1 \<and> flag_2,
-   state_ideal_functionalities := new_func_map,
+   state_functionalities := new_func_map,
    state_outgoing_signals := new_signals\<rparr>, AdvNone)
-))))))))"
+)))))))"
 (* Update functionality buffers, kirjuta write instructionid *)
 (* (Env võib sõnumit saades kirjutada igasse olemasolevasse porti) *)
 
@@ -169,25 +268,22 @@ fun adv_send_message :: "system_state \<Rightarrow> send_message \<Rightarrow> p
 (let (write_instructions, reply) = party_call party (sendFunc send) m in
 (case reply of
 None \<Rightarrow> 
-(s\<lparr>state_protocol_parties := 
-          map_upds (state_protocol_parties s) 
-                   [sendParty send] 
-                   [do_write_instructions party write_instructions],
-state_previous_action := SendMessage send\<rparr>,
-       ClockIncomingReply reply) |
+  (s\<lparr>
+    state_protocol_parties := map_upds (state_protocol_parties s) [sendParty send] [do_write_instructions party write_instructions],
+    state_previous_action := SendMessage send
+    \<rparr>, ClockIncomingReply reply) |
 Some r \<Rightarrow> 
 (s\<lparr>state_previous_action := SendMessage send\<rparr>, ClockIncomingReply reply))))"
 
-fun adv_invoke_environment :: "system_state \<Rightarrow> msg \<Rightarrow>  system_state * adv_input"
-where
-"adv_invoke_environment s m = (s, InvokeEnvironmentReply (env_adv_probe env m))"
+(* Join invoke and query *)
 
 fun adv_query_functionality :: 
-"system_state \<Rightarrow> query_functionality \<Rightarrow> standard_functionality \<Rightarrow> system_state * adv_input" where
+"system_state \<Rightarrow> query_functionality \<Rightarrow> functionality \<Rightarrow> system_state * adv_input" where
 "adv_query_functionality s q fnl = 
-(s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))"
+  (s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))"
 
 (* Empty miks? *)
+(* TODO: add Clock \<rightarrow> Send laziness test. *)
 fun adv_step ::
 "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
 "adv_step (s, action)  =
@@ -205,12 +301,13 @@ SendMessage send \<Rightarrow>
   (case (state_protocol_parties s) (sendParty send) of
   None \<Rightarrow> no_action s |
   Some party \<Rightarrow> adv_send_message s send party) |
-InvokeEnvironment m \<Rightarrow> adv_invoke_environment s m |
 QueryFunctionality q \<Rightarrow> 
-  (case (state_ideal_functionalities s) (queryTarget q) of
+  (case (state_functionalities s) (queryTarget q) of
   None \<Rightarrow>  no_action s |
-  Some functionality \<Rightarrow> adv_query_functionality s q functionality))"
+  Some fnl \<Rightarrow> adv_query_functionality s q fnl))"
 
+
+(* Initialize: the environment sends an INIT message to all interpreters? *)
 fun initialize :: "system_state \<Rightarrow> system_state * adv_input"
   where
 "initialize s = s"
@@ -220,7 +317,9 @@ consts input_to_action :: "system_state * adv_input \<Rightarrow> system_state *
 fun exec :: "system_state * adv_action \<Rightarrow> system_state * adv_action" where
 "exec s a = input_to_action (adv_step (input_to_action initialize s))"
 
-consts full_exec :: "system_state * adv_action \<Rightarrow> bool"
+(* What is this?*)
+consts full_exec :: "system_state  \<Rightarrow> bool"
+
 
 
 

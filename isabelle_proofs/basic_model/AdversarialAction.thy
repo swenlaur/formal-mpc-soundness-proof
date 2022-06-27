@@ -21,8 +21,6 @@ record query_functionality =
   queryInstance :: instance_label
   queryMessage :: msg
 
-(* TODO: Send message actions are missing! *)
-(* J: I think this is not relevant anymore *)
 record send_message =
   sendParty :: party_id
   sendFunc :: functionality_id
@@ -34,7 +32,6 @@ datatype adv_action =
   CorruptParty party_id |
   BufferAction buffer_action |
   SendMessage send_message |
-  InvokeEnvironment msg |
   QueryFunctionality query_functionality
 
 end

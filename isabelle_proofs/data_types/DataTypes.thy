@@ -3,39 +3,24 @@ theory DataTypes
     Main 
 begin
 
-(* Types made up for the project *)
 typedecl payload 
 datatype msg = Message "nat * nat * payload"
-typedecl party_id 
-typedecl functionality_id
+type_synonym party_id = nat
+type_synonym functionality_id = nat
 type_synonym msg_index = nat
-(* Obviously state can't remain like this. *)
 typedecl module_type 
 
-typedecl public_param (* Not sure if they're necessary, still *)
+typedecl public_param
 typedecl private_param 
-
-(* Types from the Python code *)
-(* code.py *)
-typedecl code
-
-(* instance_labels.py *)
 typedecl instance_label
-typedecl null_instance_label (* constant *)
-(* In Python, this inherits from IL *)
-
-(* values.py *)
+typedecl null_instance_label
 typedecl value_type
 typedecl value_type_label
 
 (* memory_locations.py *)
 typedecl memory_location 
-typedecl pinned_memory_location (* Constant - option type? *)
-
-(* instance_state.py *)
+typedecl pinned_memory_location
 datatype instance_state = InstanceState "(value_type_label \<Rightarrow> memory_location \<Rightarrow> value_type) option"
-
-(* trusted_setup.py *)
 datatype trusted_setup = TrustedSetup "(public_param \<times> private_param) list"
 (* This is supposed to actually be a randomized function. *)
 (* Should actually have something more like :
@@ -44,17 +29,26 @@ trusted_setup (does something with the random values) *)
 
 
 (* protocol_description.py *)
-datatype protocol_description = ProtocolDescription "code list"
+datatype cmd = Sleep | Eval | Jump | Send | DMACall 
+datatype int_msg = Any msg |
+ InitMsg "instance_label * instance_label * msg" |
+ SleepMsg instance_label
+
+datatype interpreter_instruction =
+ NoneInstr | InitInstr | SleepInstr | EvalInstr |
+ JumpInstr nat | SendInstr nat | DMAOutInstr nat | DMAInInstr nat
+
+datatype protocol_description = ProtocolDescription "cmd list list"
 (* similarly here? *)
 
-type_synonym write_instructions = "(functionality_id \<times> msg) list"
+type_synonym write_instructions = "(nat \<times> msg) list"
+consts get_protocol_instances :: "msg \<Rightarrow> instance_label \<times> instance_label"
 
 datatype adv_input =  
   AdvNone |             
   CorruptionReply "(instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" |
   PeekReply msg |
-  ClockIncomingReply "(functionality_id \<times> msg) option" |
+  ClockIncomingReply "(nat \<times> msg) option" |
   SendIncomingReply write_instructions |
-  InvokeEnvironmentReply msg | (* Any type in Python *)
-  QueryFunctionalityReply msg
+  QueryFunctionalityReply "msg * write_instructions" (* Any type in Python *)
 end
