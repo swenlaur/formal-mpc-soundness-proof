@@ -12,7 +12,7 @@ record functionality =
 
 consts fnl_call :: "'a functionality_scheme \<Rightarrow> functionality_id \<Rightarrow> msg \<Rightarrow> msg option"
 
-consts fnl_adv_probe :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg"
+consts fnl_adv_probe :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg * write_instructions"
 (* võiks saata write_instructioneid *)
 
 definition set_outgoing_buffers :: 

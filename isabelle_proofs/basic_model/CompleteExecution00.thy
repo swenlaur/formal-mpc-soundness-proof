@@ -87,8 +87,8 @@ definition protocol_parties_00 where
 "protocol_parties_00 = map_of [(1, party1), (2, party2)]"
 
   (* Funktsionaalsuste map *)
-definition protocol_fnl_00  where
-"protocol_fnl_00 = map_of [(1, fnl1), (2, fnl2), (3, env)]"
+definition protocol_fnls_00  where
+"protocol_fnls_00 = map_of [(1, fnl1), (2, fnl2), (3, env)]"
 
   (* Laziness checki signaalide map *)
      (* nimetada ümber? *)
@@ -100,7 +100,7 @@ definition system_state_00 where
 "system_state_00 = 
   \<lparr>
   state_protocol_parties = protocol_parties_00,
-  state_functionalities = protocol_fnl_00,
+  state_functionalities = protocol_fnls_00,
   state_corrupted_parties = {},
   state_outgoing_signals = outgoing_signals_00,
   state_previous_action = Empty,
@@ -108,17 +108,59 @@ definition system_state_00 where
   \<rparr>"
 
 (* ============================================================================================== *)
+
+
 (* NB!
 
 datatype adv_input =  
-  AdvNone |
-  CorruptionReply "state \<times> public_param \<times> private_param" |
+  AdvNone |             
+  CorruptionReply "(instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" |
   PeekReply msg |
-  ClockIncomingReply "(functionality_id \<times> msg) option" |
-  SendIncomingReply "(functionality_id \<times> msg) list" | (* Oh no *)
-  InvokeEnvironmentReply msg | (* Any type in Python *)
-  QueryFunctionalityReply msg
+  ClockIncomingReply "(nat \<times> msg) option" |
+  SendIncomingReply write_instructions |
+  QueryFunctionalityReply "msg * write_instructions"
+
 *)
+
+(* -------- helperid adv_clock_incoming_buffer & adv_clock_outgoing_buffer jaoks --------------- *) 
+
+fun adv_clock_laziness_check :: "system_state \<Rightarrow> system_state" where
+"adv_clock_laziness_check s = (if (\<exists>p func party'. 
+          state_protocol_parties s p = Some party'
+        \<and> is_corrupted party'
+        \<and> \<not>(empty_incoming_buffer party' func)) 
+           then s\<lparr>state_flag := False\<rparr>
+           else s)"
+
+fun adv_clock_flag_1 :: "system_state \<Rightarrow> bool" where
+"adv_clock_flag_1 s = (if (\<exists>p func part.
+          state_protocol_parties s p = Some part
+        \<and> is_corrupted part
+        \<and> \<not>(empty_incoming_buffer part func)) 
+then False else True)"
+
+fun adv_clock_flag_2 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> bool" where
+"adv_clock_flag_2 s b m = 
+(let (t1, t2) = get_protocol_instances m in
+(case (state_outgoing_signals s) ((bufferParty b), (bufferFunc b), t1, t2) of
+None \<Rightarrow> False |
+Some boolean \<Rightarrow>  boolean))"
+
+
+fun adv_clock_outgoing_buffer_1 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> system_state * adv_input"
+  where
+"adv_clock_outgoing_buffer_1 s b m =(let flag_1 = adv_clock_flag_1 s  in
+(let new_func_map = map_upds (state_functionalities s) 
+                             [bufferFunc b]
+                             [fnl_update ((state_functionalities s) (bufferFunc b)) (bufferParty b) m]  in
+(let new_signals = state_outgoing_signals s in 
+(let flag_2 = adv_clock_flag_2 s b m in
+(s\<lparr>state_flag := flag_1 \<and> flag_2,
+   state_functionalities := new_func_map,
+   state_outgoing_signals := new_signals\<rparr>, AdvNone)))))" 
+
+(* ---------------------------------------------------------------------------------------------- *)
+
 
 fun no_action :: "system_state \<Rightarrow> system_state * adv_input" where
 (* 
@@ -130,7 +172,6 @@ sama olek s,
 tühi vastus AdvNone 
 *)
 "no_action s = (s, AdvNone)"
-
 
 fun adv_corrupt_party :: "system_state \<Rightarrow> party_id \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
@@ -155,6 +196,7 @@ tühivastuse AdvNone
   )"
 
 
+
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
 s: olek
@@ -169,6 +211,7 @@ vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
+
 
 
 fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
@@ -186,17 +229,9 @@ vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
 None \<Rightarrow> no_action s|
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
-fun laziness_check :: "system_state \<Rightarrow> system_state" where
-"laziness_check s = (if (\<exists>p func party'. 
-          state_protocol_parties s p = Some party'
-        \<and> is_corrupted party'
-        \<and> \<not>(empty_incoming_buffer party' func)) 
-           then s\<lparr>state_flag := False\<rparr>
-           else s)"
-
 fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_incoming_buffer s b party = 
-(let s0 = laziness_check s in
+(let s0 = adv_clock_laziness_check s in
 (let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
 (case opt_m of 
   None \<Rightarrow> no_action s |
@@ -211,35 +246,12 @@ fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rig
     Some r \<Rightarrow> 
     (s0\<lparr>
         state_previous_action := BufferAction b
-       \<rparr>, ClockIncomingReply reply))))))"
-
-fun adv_clock_flag_1 :: "system_state \<Rightarrow> bool" where
-"adv_clock_flag_1 s = (if (\<exists>p func part.
-          state_protocol_parties s p = Some part
-        \<and> is_corrupted part
-        \<and> \<not>(empty_incoming_buffer part func)) 
-then False else True)"
-
-fun adv_clock_flag_2 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> bool" where
-"adv_clock_flag_2 s b m = 
-(let (t1, t2) = get_protocol_instances m in
-(case (state_outgoing_signals s) ((bufferParty b), (bufferFunc b), t1, t2) of
-None \<Rightarrow> False |
-Some boolean \<Rightarrow>  boolean))"
-
-fun adv_clock_outgoing_buffer_1 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> system_state * adv_input"
-  where
-"adv_clock_outgoing_buffer_1 s b m =(let flag_1 = adv_clock_flag_1 s  in
-(let new_func_map = map_upds (state_functionalities s) 
-                             [bufferFunc b]
-                             [fnl_update ((state_functionalities s) (bufferFunc b)) (bufferParty b) m]  in
-(let new_signals = state_outgoing_signals s in 
-(let flag_2 = adv_clock_flag_2 s b m in
-(s\<lparr>state_flag := flag_1 \<and> flag_2,
-   state_functionalities := new_func_map,
-   state_outgoing_signals := new_signals\<rparr>, AdvNone)))))" 
+       \<rparr>, ClockIncomingReply reply)
+)))))"
 
 (* and what the new signals are supposed to be. *)
+
+
 fun adv_clock_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_clock_outgoing_buffer s b party = 
 (case (state_functionalities s) (bufferFunc b) of
@@ -250,8 +262,8 @@ Some func \<Rightarrow>
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> adv_clock_outgoing_buffer_1 s b m 
 )))"
-(* Update functionality buffers, kirjuta write instructionid *)
 (* (Env võib sõnumit saades kirjutada igasse olemasolevasse porti) *)
+
 
 fun adv_buffer_action :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 "adv_buffer_action s b party = 
@@ -265,10 +277,11 @@ Clock \<Rightarrow>
 Incoming \<Rightarrow> adv_clock_incoming_buffer s b party |
 Outgoing \<Rightarrow> adv_clock_outgoing_buffer s b party))"
 
+
 fun adv_send_message :: "system_state \<Rightarrow> send_message \<Rightarrow> protocol_party \<Rightarrow>  system_state * adv_input" where
 "adv_send_message s send party =
 (let m = sendMessage send in
-(let (write_instructions, reply) = party_call party (sendFunc send) m in
+(let (write_instructions, reply) = party_make_write_instructions party (sendFunc send) m in
 (case reply of
 None \<Rightarrow> 
   (s\<lparr>
@@ -280,10 +293,12 @@ Some r \<Rightarrow>
 
 (* Join invoke and query *)
 
-fun adv_query_functionality :: 
+
+fun adv_query_functionality ::
 "system_state \<Rightarrow> query_functionality \<Rightarrow> functionality \<Rightarrow> system_state * adv_input" where
 "adv_query_functionality s q fnl = 
   (s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))"
+
 
 (* Empty miks? *)
 (* TODO: add Clock \<rightarrow> Send laziness test. *)
