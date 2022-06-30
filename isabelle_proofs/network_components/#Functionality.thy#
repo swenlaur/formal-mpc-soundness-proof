@@ -7,7 +7,8 @@ begin
 
 (* I should only instantiate fnl_is_env = false with std fnl *)
 typedecl env_state
-typedecl 
+typedecl func_state
+
 record functionality =
   fnl_outgoing_buffers :: "msg list list"
   fnl_is_env :: bool
@@ -18,9 +19,7 @@ consts fnl_call :: "'a functionality_scheme \<Rightarrow> functionality_id \<Rig
 consts fnl_adv_probe :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg * write_instructions"
 (* võiks saata write_instructioneid *)
 
-fun invoke_environment :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg * write_instructions"
-  where
-"invoke_environment fnl m = "
+consts invoke_environment :: "'a functionality_scheme \<Rightarrow> msg \<Rightarrow> msg * write_instructions"
 
 
 definition set_outgoing_buffers :: 

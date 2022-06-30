@@ -67,7 +67,7 @@ definition fnl1 :: functionality where
 
   (* Funktsionaalsus 2 *)
 definition fnl2 :: functionality where
-"fnl2 = 
+"fnl2 =
   \<lparr>
   fnl_outgoing_buffers = [[],[]], 
   fnl_is_env = False
@@ -298,11 +298,24 @@ fun adv_query_functionality ::
   (s, QueryFunctionalityReply (fnl_adv_probe fnl (queryMessage q)))"
 
 
+fun clock_send_check :: "system_state \<Rightarrow> adv_action \<Rightarrow> system_state" where
+"clock_send_check s a =
+(if \<exists>b. (state_previous_action s) = BufferAction b 
+  \<and> bufferDirection b = Incoming 
+  \<and> bufferAction b = Clock
+  then 
+  (if \<exists>send. a = (SendMessage send) \<and> sendDir send = Incoming 
+    then s  
+    else s\<lparr>state_flag := False\<rparr>)
+else s)"
+
+
 (* Empty miks? *)
 (* TODO: add Clock \<rightarrow> Send laziness test. *)
 fun adv_step ::
 "system_state  \<times> adv_action \<Rightarrow> system_state \<times> adv_input" where
 "adv_step (s, action)  =
+(let s = clock_send_check s action in
 (case action of
 Empty => no_action s |
 CorruptParty p \<Rightarrow> 
@@ -320,7 +333,7 @@ SendMessage send \<Rightarrow>
 QueryFunctionality q \<Rightarrow> 
   (case (state_functionalities s) (queryTarget q) of
   None \<Rightarrow>  no_action s |
-  Some fnl \<Rightarrow> adv_query_functionality s q fnl))"
+  Some fnl \<Rightarrow> adv_query_functionality s q fnl)))"
 
 
 consts trusted_setup :: "system_state"

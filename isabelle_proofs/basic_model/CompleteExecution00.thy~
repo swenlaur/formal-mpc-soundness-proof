@@ -194,8 +194,6 @@ tühivastuse AdvNone
     \<rparr>, AdvNone
   )"
 
-
-
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
 s: olek
@@ -210,8 +208,6 @@ vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
-
-
 
 fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 

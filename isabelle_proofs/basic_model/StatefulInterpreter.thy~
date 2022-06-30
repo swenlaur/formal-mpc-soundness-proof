@@ -98,10 +98,13 @@ None \<Rightarrow> s))))"
 definition get_write_instructions :: "'a stateful_interpreter_scheme \<Rightarrow> (functionality_id \<times> msg) list" where
 "get_write_instructions s = []"
 
-(* Takes the initial state*)
+(* Takes the initial state *)
 definition interpreter_call ::
-"'a stateful_interpreter_scheme  \<Rightarrow> (functionality_id \<times> msg) list"  where
-"interpreter_call s = get_write_instructions (do_stuff s)"
+"'a stateful_interpreter_scheme \<Rightarrow> functionality_id \<Rightarrow> msg  \<Rightarrow> (functionality_id \<times> msg) list"  where
+"interpreter_call s f m = 
+(let new_incoming_buffers = list_update (int_incoming_buffers s) (f) (Any m) in
+(let s = s\<lparr>int_incoming_buffers := new_incoming_buffers\<rparr> in
+(get_write_instructions (do_stuff s))))"
 
 (* ============================================================================================== *)
 

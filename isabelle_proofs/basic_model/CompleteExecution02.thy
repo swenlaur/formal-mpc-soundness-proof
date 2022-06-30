@@ -95,7 +95,7 @@ definition protocol_fnls_00  where
 definition outgoing_signals_00 where
 "outgoing_signals_00 = (\<lambda>x. None)"
 
-  (* Olek *)
+  (* Olek, vt BasicState.thy *)
 definition system_state_00 where
 "system_state_00 = 
   \<lparr>
@@ -194,8 +194,6 @@ tühivastuse AdvNone
     \<rparr>, AdvNone
   )"
 
-
-
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
 s: olek
@@ -210,8 +208,6 @@ vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
-
-
 
 fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
@@ -229,24 +225,20 @@ None \<Rightarrow> no_action s|
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
 
 fun adv_clock_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
-"adv_clock_incoming_buffer s b party = 
-(let s0 = adv_clock_laziness_check s in
-(let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in
+"adv_clock_incoming_buffer s b party =
+(let (opt_m, p) = (clock_message party (bufferFunc b) (bufferInd b)) in 
 (case opt_m of 
-  None \<Rightarrow> no_action s |
-  Some m \<Rightarrow>
-    (let (write_instructions, reply) = party_make_write_instructions party (bufferFunc b) m in
-    (case reply of
-    None \<Rightarrow> 
-    (s0\<lparr>
-        state_protocol_parties := map_upds (state_protocol_parties s) [bufferParty b] [do_write_instructions party write_instructions],
-        state_previous_action := BufferAction b
-       \<rparr>,ClockIncomingReply reply) |
-    Some r \<Rightarrow> 
-    (s0\<lparr>
-        state_previous_action := BufferAction b
-       \<rparr>, ClockIncomingReply reply)
-)))))"
+      None \<Rightarrow> no_action s |
+      Some m \<Rightarrow>
+        (let (write_instructions, reply) = party_make_write_instructions party (bufferFunc b) m in
+(case is_corrupted party of
+  False \<Rightarrow> 
+    (s\<lparr>state_protocol_parties := map_upds (state_protocol_parties s) [bufferParty b] [do_write_instructions p write_instructions]\<rparr>, AdvNone) |
+  True \<Rightarrow>
+    (let s0 = adv_clock_laziness_check s in
+    (let interpreter_reply = interpreter_call (party_interpreter party) (bufferFunc b) m in
+    (s\<lparr>state_protocol_parties := map_upds (state_protocol_parties s) [bufferParty b] [do_write_instructions p write_instructions]\<rparr>, AdvNone)
+))))))"
 
 (* and what the new signals are supposed to be. *)
 
