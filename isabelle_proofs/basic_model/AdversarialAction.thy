@@ -15,6 +15,7 @@ record buffer_action =
   bufferAction :: act
   bufferInd :: msg_index
 
+(* Env has no Module, no Instance *)
 record query_functionality =
   queryTarget :: functionality_id
   queryModule :: module_type
