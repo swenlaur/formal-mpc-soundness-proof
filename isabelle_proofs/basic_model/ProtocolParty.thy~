@@ -5,6 +5,7 @@ theory ProtocolParty
     "~/IsabelleProjects/formal-mpc-soundness-proof/isabelle_proofs/data_types/DataTypes"
 begin
 
+(* If k is the number of functionalities, then there are k+2 *)
 record protocol_party =
   party_interpreter :: stateful_interpreter
   party_corrupted :: bool
@@ -22,9 +23,8 @@ definition corrupt_party ::
 (* (instance_label, instance_state \<times> nat) map \<Rightarrow> interpreter_state *)
 definition internal_state :: 
 "'a protocol_party_scheme 
-\<Rightarrow> (instance_label, instance_state \<times> nat) map \<times> public_param \<times> private_param" where
+\<Rightarrow> (instance_label, nat * nat * instance_state) map \<times> public_param \<times> private_param" where
 "internal_state p = reveal_state (party_interpreter p)"
-
 
 (* Helper list methods *)
 fun fst_unzip :: "('a \<times> 'b) list \<Rightarrow> 'a list" where
@@ -87,8 +87,8 @@ definition do_write_instructions ::
 "'a protocol_party_scheme \<Rightarrow> (functionality_id \<times> msg) list \<Rightarrow> 'a protocol_party_scheme" where
 "do_write_instructions p w = p\<lparr>party_outgoing_buffers := (update_outgoing_buffers (party_outgoing_buffers p) w)\<rparr>"
 
-definition party_call :: "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg  \<Rightarrow> ((functionality_id \<times> msg) list) \<times> ((functionality_id \<times> msg) option)" where
-"party_call p f m = (if party_corrupted p = True then ([], Some (f, m)) 
+definition party_make_write_instructions :: "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg  \<Rightarrow> write_instructions \<times> ((functionality_id \<times> msg) option)" where
+"party_make_write_instructions p f m = (if party_corrupted p = True then ([], Some (f, m)) 
                else (interpreter_call (party_interpreter p), None))"
 
 end

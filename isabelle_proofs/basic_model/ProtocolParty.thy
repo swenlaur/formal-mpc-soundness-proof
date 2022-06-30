@@ -89,6 +89,6 @@ definition do_write_instructions ::
 
 definition party_make_write_instructions :: "'a protocol_party_scheme \<Rightarrow> functionality_id \<Rightarrow> msg  \<Rightarrow> write_instructions \<times> ((functionality_id \<times> msg) option)" where
 "party_make_write_instructions p f m = (if party_corrupted p = True then ([], Some (f, m)) 
-               else (interpreter_call (party_interpreter p), None))"
+               else (interpreter_call (party_interpreter p) f m, None))"
 
 end

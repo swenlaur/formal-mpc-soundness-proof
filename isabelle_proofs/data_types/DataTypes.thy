@@ -34,6 +34,8 @@ datatype int_msg = Any msg |
  InitMsg "instance_label * instance_label * msg" |
  SleepMsg instance_label
 
+typedecl function_name
+
 datatype interpreter_instruction =
  NoneInstr | InitInstr | SleepInstr | EvalInstr |
  JumpInstr nat | SendInstr nat | DMAOutInstr nat | DMAInInstr nat

@@ -108,7 +108,7 @@ definition system_state_00 where
   \<rparr>"
 
 (* ============================================================================================== *)
-
+(* Võiks olla abstraktne trustedsetup \<longrightarrow> system state *)
 
 (* NB!
 
@@ -145,7 +145,6 @@ fun adv_clock_flag_2 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> 
 (case (state_outgoing_signals s) ((bufferParty b), (bufferFunc b), t1, t2) of
 None \<Rightarrow> False |
 Some boolean \<Rightarrow>  boolean))"
-
 
 fun adv_clock_outgoing_buffer_1 :: "system_state \<Rightarrow> buffer_action \<Rightarrow> msg \<Rightarrow> system_state * adv_input"
   where
@@ -195,8 +194,6 @@ tühivastuse AdvNone
     \<rparr>, AdvNone
   )"
 
-
-
 fun adv_peek_incoming_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
 s: olek
@@ -211,8 +208,6 @@ vastus PeekReply m, (vastuse tüüp: AdvInput'i väli PeekReply msg)
 (case peek_incoming_buffer party (bufferFunc b) (bufferInd b) of
 None \<Rightarrow> no_action s |
 Some m \<Rightarrow> (s\<lparr>state_previous_action := BufferAction b\<rparr>, PeekReply m))"
-
-
 
 fun adv_peek_outgoing_buffer :: "system_state \<Rightarrow> buffer_action \<Rightarrow> protocol_party \<Rightarrow> system_state * adv_input" where
 (* 
@@ -291,9 +286,12 @@ None \<Rightarrow>
 Some r \<Rightarrow> 
 (s\<lparr>state_previous_action := SendMessage send\<rparr>, ClockIncomingReply reply))))"
 
-(* Join invoke and query *)
-
-
+(* 
+fnl_adv_probe annab reply, write_instructions ja func_state.
+pärast seda toimub nii:
+evaluate(write_instructions) mängijates
+update state w/ new func_state
+*)
 fun adv_query_functionality ::
 "system_state \<Rightarrow> query_functionality \<Rightarrow> functionality \<Rightarrow> system_state * adv_input" where
 "adv_query_functionality s q fnl = 
@@ -325,18 +323,18 @@ QueryFunctionality q \<Rightarrow>
   Some fnl \<Rightarrow> adv_query_functionality s q fnl))"
 
 
-(* Initialize: the environment sends an INIT message to all interpreters? *)
-fun initialize :: "system_state \<Rightarrow> system_state * adv_input"
-  where
-"initialize s = s"
-
+consts trusted_setup :: "system_state"
 consts input_to_action :: "system_state * adv_input \<Rightarrow> system_state * adv_action"
 
-fun exec :: "system_state * adv_action \<Rightarrow> system_state * adv_action" where
-"exec s a = input_to_action (adv_step (input_to_action initialize s))"
+fun exec :: "system_state *  adv_action \<Rightarrow> system_state * adv_action" where
+"exec (s, a) = input_to_action (adv_step (trusted_setup, a))"
+
 
 (* What is this?*)
-consts full_exec :: "system_state  \<Rightarrow> bool"
+definition full_exec :: bool where
+"full_exec = True"
+
+consts finalize :: "func_state \<Rightarrow> bool"
 
 
 
